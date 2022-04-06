@@ -1,0 +1,20 @@
+debug:
+  datatype: mysql
+  hostname: localhost
+  database: test
+  username: root
+  password: "000000"
+
+test:
+  datatype: mysql
+  hostname: 112.126.61.95
+  database: keep_happy
+  username: keep
+  password: 88888888
+
+release:
+  datatype: mysql
+  hostname: localhost-rrr
+  database: test
+  username: root
+  password: a1937258
