@@ -2,6 +2,7 @@ package main
 
 import (
 	"SunProject/config"
+	"SunProject/middleware"
 	"SunProject/router"
 
 	"github.com/gin-gonic/gin"
@@ -19,11 +20,11 @@ func main() {
 	//}
 
 	engine := gin.Default()
-	engine.Use(config.LoggerToFile())
+	engine.Use(middleware.LoggerToFile())
 	route := router.Route{Engine: engine}
 	route.Run()
-	error := engine.Run(":6868")
-	if error != nil {
+	err := engine.Run(":6868")
+	if err != nil {
 		panic("服务启动失败")
 	}
 }
