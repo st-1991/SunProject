@@ -25,8 +25,8 @@ func (w Writer) Printf(format string, args ...interface{})  {
 		"file", "runtime", "row", "sql",
 	}
 	fields := logrus.Fields{}
-	for key, val := range args {
-		fields[logFields[key]] = val
+	for key, val := range logFields {
+		fields[val] = args[key]
 	}
 	Logger().WithFields(fields).Info("SQL")
 }

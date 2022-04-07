@@ -33,24 +33,32 @@ func (k RedisKey) PrefixKey() RedisKey {
 }
 
 func (k RedisKey) Set(val interface{}) RedisKey {
-		_, err := Redis.Do("set", k, val)
-		if err != nil {
-			Logger().Error(fmt.Sprintf("redis错误：%s", err))
-			return k
-		}
+	_, err := Redis.Do("set", k, val)
+	if err != nil {
+		Logger().Error(fmt.Sprintf("redis错误：%s", err))
 		return k
+	}
+	return k
 }
 
-func (k RedisKey) Get(key string) (reply interface{}, err error) {
-	return Redis.Do("get", key)
+func (k RedisKey) Get() (reply interface{}, err error) {
+	return Redis.Do("get", k)
 }
 
 func (k RedisKey) Expire(seconds int) bool {
-		_, err := Redis.Do("expire", k, seconds)
-		if err != nil {
-			return false
-		}
-		return true
+	_, err := Redis.Do("expire", k, seconds)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func (k RedisKey) Del() bool {
+	_, err := Redis.Do("del", k)
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 

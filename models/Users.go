@@ -3,6 +3,7 @@ package models
 import (
 	"SunProject/config"
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -45,20 +46,29 @@ func Users() []ApiUser {
 	return users
 }
 
-func CreateUser(phone string, sex int, email string) bool {
-	res := config.DB.Table(TableName).Create(&User{
-		Phone: phone,
-		Sex: sex,
-	})
+func CreateUser(user *User) bool {
+	res := config.DB.Table(TableName).Create(user)
 	if res.Error != nil {
 		return false
 	}
 	return true
 }
 
-// UserDetails 获取用户详情
-func UserDetails(userId int) ApiUser {
-	var user ApiUser
-	config.DB.Table(TableName).Select([]string{"id", "email", "sex"}).First(user)
-	return user
+// GetUser 获取用户详情
+func (u *User) GetUser() (User, error) {
+	var user User
+	config.DB.Where(u).First(&user)
+	if (&user).Id == 0 {
+		return user, fmt.Errorf("用户不存在")
+	}
+	return user, nil
+}
+
+// CreateNickname 生成用户昵称
+func CreateNickname() string {
+	return fmt.Sprintf("小可爱-%s", config.CreateCode())
+}
+
+func CreateAvatar() string {
+	return "http://www.gravatar.com/avatar/"
 }

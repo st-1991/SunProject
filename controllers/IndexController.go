@@ -1,7 +1,8 @@
 package controllers
 
 import (
-	"net/http"
+	"SunProject/models"
+	"github.com/garyburd/redigo/redis"
 	"regexp"
 
 	"github.com/gin-gonic/gin"
@@ -10,14 +11,12 @@ import (
 )
 
 type UserLogin struct {
-	User string `form:"username" binding:"required"`
-	Password string `form:"password" binding:"required"`
+	Phone string `form:"phone" binding:"required"`
+	Code string `form:"code" binding:"required"`
 }
 
-type UserDetails struct {
-	Phone string
-	Nickname string
-	Age int
+type LoginResult struct {
+	UserDetail models.User `json:"user_detail"`
 }
 
 func SendSms(c *gin.Context) {
@@ -41,23 +40,31 @@ func SendSms(c *gin.Context) {
 }
 
 func Login(c *gin.Context)  {
-	var form UserLogin
-	if err := c.Bind(&form); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	var param UserLogin
+	if err := c.Bind(&param); err != nil {
+		ApiResponse(c, &Response{Code: -1, Message: err.Error()})
 		return
 	}
-	if form.User != "root" || form.Password != "000000" {
-		result := config.Result{Data: "", Status: 200, Msg: "账号或密码不正确"}
-		result.Error(c)
+
+	redisKey := config.RedisKey("sms:" + param.Phone)
+	code, err := redis.String(redisKey.PrefixKey().Get())
+	if err != nil {
+		ApiResponse(c, &Response{Code: -1, Message: "请发送验证码！"})
 		return
 	}
-	userInfo := make(map[string]interface{})
-	userInfo["token"] = "adfafdafd"
-	userInfo["details"] = UserDetails{
-		Phone: "13785925782",
-		Nickname: "你大哥",
-		Age: 11,
+
+	if code != param.Code {
+		ApiResponse(c, &Response{Code: -1, Message: "验证码错误！"})
+		return
 	}
-	result := config.Result{Data: userInfo, Status: 200, Msg: "操作成功"}
-	result.Success(c)
+	User := models.User{Phone: param.Phone}
+	userDetails, err := User.GetUser()
+	if err != nil {
+		userDetails = models.User{Phone: param.Phone, Nickname: models.CreateNickname(), Avatar: models.CreateAvatar()}
+		models.CreateUser(&userDetails)
+	}
+
+
+	redisKey.PrefixKey().Del()
+	ApiResponse(c, &Response{Data: &LoginResult{UserDetail: userDetails}})
 }
