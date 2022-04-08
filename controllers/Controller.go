@@ -7,13 +7,13 @@ import (
 
 type Response struct {
 	Code int `json:"code"`
-	Message string `json:"message"`
+	Msg string `json:"Msg"`
 	Data interface{} `json:"data"`
 }
 
 func ApiResponse(c *gin.Context, response *Response)  {
-	if response.Message == "" {
-		response.Message = "success"
+	if response.Msg == "" {
+		response.Msg = "success"
 	}
 	c.JSON(http.StatusOK, response)
 }

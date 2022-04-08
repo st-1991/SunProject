@@ -1,6 +1,8 @@
 package config
 
 import (
+	"crypto/hmac"
+	"crypto/md5"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"math/rand"
@@ -46,6 +48,13 @@ func (r Result) Error(c *gin.Context) {
 func CreateCode() string {
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	return fmt.Sprintf("%06v", rnd.Intn(100000))
+}
+
+func GenHMACMd5(ciphertext, key []byte) string {
+	mac := hmac.New(md5.New, key)
+	mac.Write(ciphertext)
+	hmac := mac.Sum(nil)
+	return fmt.Sprintf("%x", hmac)
 }
 
 

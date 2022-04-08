@@ -15,9 +15,7 @@ type SmsData struct {
 	ExpMinute int `json:"expMinute"`
 }
 
-/**
-	发送验证码
- */
+// SendSms 发送验证码
 func SendSms(phone string, code string) bool {
 	smsData, _:= json.Marshal(&SmsData{
 		Code: code,

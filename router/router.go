@@ -15,6 +15,7 @@ func (r *Route) Run() {
 	api := r.Engine.Group("/api").Use(middleware.KeepLogin())
 	{
 		api.GET("/send_sms", controllers.SendSms)
+		api.POST("/upload_file", controllers.UploadFile)
 		api.POST("/login", controllers.Login)
 		api.GET("/user_info", controllers.UserInfo)
 		api.GET("/users", controllers.UserList)

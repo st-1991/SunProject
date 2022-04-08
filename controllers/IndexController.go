@@ -30,31 +30,31 @@ func SendSms(c *gin.Context) {
 	code := config.CreateCode()
 
 	//if ok := libary.SendSms(phone, code); !ok {
-	//	ApiResponse(c, &Response{Code: -1, Message: "短信发送失败"})
+	//	ApiResponse(c, &Response{Code: -1, Msg: "短信发送失败"})
 	//	return
 	//}
 
 	redisKey := config.RedisKey("sms:" + phone)
 	redisKey.PrefixKey().Set(code).Expire(300)
-	ApiResponse(c, &Response{Message: "发送成功，请注意查收！"})
+	ApiResponse(c, &Response{Msg: "发送成功，请注意查收！"})
 }
 
 func Login(c *gin.Context)  {
 	var param UserLogin
 	if err := c.Bind(&param); err != nil {
-		ApiResponse(c, &Response{Code: -1, Message: err.Error()})
+		ApiResponse(c, &Response{Code: -1, Msg: err.Error()})
 		return
 	}
 
 	redisKey := config.RedisKey("sms:" + param.Phone)
 	code, err := redis.String(redisKey.PrefixKey().Get())
 	if err != nil {
-		ApiResponse(c, &Response{Code: -1, Message: "请发送验证码！"})
+		ApiResponse(c, &Response{Code: -1, Msg: "请发送验证码！"})
 		return
 	}
 
 	if code != param.Code {
-		ApiResponse(c, &Response{Code: -1, Message: "验证码错误！"})
+		ApiResponse(c, &Response{Code: -1, Msg: "验证码错误！"})
 		return
 	}
 	User := models.User{Phone: param.Phone}

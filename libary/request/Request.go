@@ -15,7 +15,7 @@ type Result struct {
 	Err error
 }
 
-// Content-Type: multipart/form-data
+// FromDataPost Content-Type: multipart/form-data
 func FromDataPost(url string, params map[string][]byte) Result {
 	buf := new(bytes.Buffer)
 	w := multipart.NewWriter(buf)
@@ -33,6 +33,26 @@ func FromDataPost(url string, params map[string][]byte) Result {
 		return Result{nil, err}
 	}
 	req.Header.Set("Content-Type", w.FormDataContentType())
+	client := &http.Client{Timeout: 5 * time.Second}
+	res, err := client.Do(req)
+	if err != nil {
+		config.Logger().Error(fmt.Sprintf("发送请求失败：%s", err))
+		return Result{nil, err}
+	}
+	return Result{res, nil}
+}
+
+func JsonPost(url string, params []byte, headers map[string]string) Result {
+	reader := bytes.NewReader(params)
+	req, err := http.NewRequest(http.MethodPost, url, reader)
+	if err != nil {
+		config.Logger().Error(fmt.Sprintf("建立链接失败：%s", err))
+		return Result{nil, err}
+	}
+	req.Header.Set("Content-Type", "application/json;charset=utf-8")
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
 	client := &http.Client{Timeout: 5 * time.Second}
 	res, err := client.Do(req)
 	if err != nil {
