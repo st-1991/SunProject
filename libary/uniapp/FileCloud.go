@@ -4,6 +4,8 @@ import (
 	"SunProject/config"
 	"SunProject/libary/request"
 	"encoding/json"
+	"fmt"
+	"mime/multipart"
 	"net/http"
 	"sort"
 	"strconv"
@@ -27,10 +29,19 @@ type UniApp struct {
 	ClientSecret string
 	Token string
 	Url string
-	Sign string
 }
 
-func (u UniApp) InitConfig() UniApp {
+type AliYun struct {
+	ID string `json:"id"`
+	CdnDomain string `json:"cdnDomain"`
+	Signature string `json:"signature"`
+	Policy string `json:"policy"`
+	AccessKeyId string `json:"accessKeyId"`
+	OssPath string `json:"ossPath"`
+	Host string `json:"host"`
+}
+
+func (u *UniApp) InitConfig() *UniApp {
 	u.SpaceId = "6dd07f54-c3ab-447b-87ff-51ff48538c90"
 	u.ClientSecret = "fWQ7szy9J4u0gKz0ruZoGA=="
 	u.Url = "https://api.bspapp.com/client"
@@ -79,7 +90,7 @@ func (u UniApp) GetToken() (string, error) {
 	return r.Data.AccessToken, nil
 }
 
-func (u UniApp) PreUploadFile(filename string) (string, error) {
+func (u *UniApp) PreUploadFile(filename string) (AliYun, error) {
 	paramsStruct := struct {
 		FileName string `json:"filename"`
 		Env string `json:"env"`
@@ -90,7 +101,7 @@ func (u UniApp) PreUploadFile(filename string) (string, error) {
 
 	token, err := u.GetToken()
 	if err != nil {
-		return "", err
+		return AliYun{}, err
 	}
 	requestParams := map[string]string{
 		"method":    "serverless.file.resource.generateProximalSign",
@@ -106,7 +117,92 @@ func (u UniApp) PreUploadFile(filename string) (string, error) {
 	result := request.JsonPost(u.Url, requestParamsJson, headers)
 	data, err := result.Body()
 	if err != nil {
+		return AliYun{}, err
+	}
+	dataJson := struct {
+		Success bool `json:"success"`
+		Data AliYun `json:"data"`
+	}{}
+	_ = json.Unmarshal(data, &dataJson)
+	if 	result.StatusCode() != http.StatusOK || dataJson.Success != true {
+		return AliYun{}, fmt.Errorf("请求失败")
+	}
+	u.Token = token
+	return dataJson.Data, nil
+}
+
+func (a AliYun) Upload(file *multipart.FileHeader) (string, error){
+	params := map[string][]byte{
+		"Cache-Control": []byte("max-age=2592000"),
+		"Content-Disposition": []byte("attachment"),
+		"OSSAccessKeyId": []byte(a.AccessKeyId),
+		"Signature": []byte(a.Signature),
+		"host": []byte(a.Host),
+		"id": []byte(a.ID),
+		"key": []byte(a.OssPath),
+		"policy": []byte(a.Policy),
+		"success_action_status": []byte("200"),
+	}
+	src, err := file.Open()
+	if err != nil {
+		return "", err
+	}
+	defer src.Close()
+	fileParam := []request.FileParam{
+		{
+			FiledName: "file",
+			Name: file.Filename,
+			FormFile: src,
+		},
+	}
+	res := request.FromDataPost("https://" + a.Host + "/", params, fileParam, map[string]string{"X-OSS-server-side-encrpytion":"AES256"})
+	if res.Err != nil {
+		return "", res.Err
+	}
+	data, err := res.Body()
+	if err != nil {
 		return "", err
 	}
 	return string(data), nil
+}
+
+func (u *UniApp) CompleteUploadFile(id string) bool {
+	paramsStruct := struct {
+		ID string `json:"id"`
+	}{}
+	paramsStruct.ID = id
+	params, _ := json.Marshal(paramsStruct)
+
+	if len(u.Token) == 0 {
+		if token, err := u.GetToken(); err == nil {
+			u.Token = token
+		} else {
+			return false
+		}
+	}
+
+	requestParams := map[string]string{
+		"method":    "serverless.file.resource.report",
+		"params": string(params),
+		"spaceId":   u.SpaceId,
+		"timestamp": strconv.FormatInt(time.Now().UnixNano() / 1e6, 10),
+		"token" : u.Token,
+	}
+	headers := CommonHeaders()
+	headers["x-serverless-sign"] = u.GetSign(requestParams)
+	headers["x-basement-token"] = u.Token
+	requestParamsJson, _ := json.Marshal(requestParams)
+	result := request.JsonPost(u.Url, requestParamsJson, headers)
+	data, err := result.Body()
+	if err != nil {
+		return false
+	}
+	dataJson := struct {
+		Success bool `json:"success"`
+	}{}
+	_ = json.Unmarshal(data, &dataJson)
+	if 	result.StatusCode() != http.StatusOK || dataJson.Success != true {
+		return false
+	}
+	return true
 }

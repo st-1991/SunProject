@@ -15,14 +15,27 @@ type Result struct {
 	Err error
 }
 
+type FileParam struct {
+	FiledName string
+	Name string
+	FormFile multipart.File
+}
+
 // FromDataPost Content-Type: multipart/form-data
-func FromDataPost(url string, params map[string][]byte) Result {
+func FromDataPost(url string, params map[string][]byte, files []FileParam, headers map[string]string) Result {
 	buf := new(bytes.Buffer)
 	w := multipart.NewWriter(buf)
 
 	for k, v := range params {
 		if 	fw, err := w.CreateFormField(k); err == nil {
 			fw.Write(v)
+		}
+	}
+
+	for _, file := range files {
+		if createFormFile, err := w.CreateFormFile(file.FiledName, file.Name); err == nil {
+			readAll, _ := ioutil.ReadAll(file.FormFile)
+			createFormFile.Write(readAll)
 		}
 	}
 	w.Close()
@@ -33,12 +46,16 @@ func FromDataPost(url string, params map[string][]byte) Result {
 		return Result{nil, err}
 	}
 	req.Header.Set("Content-Type", w.FormDataContentType())
+	for key, header := range headers {
+		req.Header.Set(key, header)
+	}
 	client := &http.Client{Timeout: 5 * time.Second}
 	res, err := client.Do(req)
 	if err != nil {
 		config.Logger().Error(fmt.Sprintf("发送请求失败：%s", err))
 		return Result{nil, err}
 	}
+	config.Logger().Info(fmt.Sprintf("%d", res.StatusCode))
 	return Result{res, nil}
 }
 

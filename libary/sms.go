@@ -28,7 +28,7 @@ func SendSms(phone string, code string) bool {
 		"data": smsData,
 	}
 
-	res := request.FromDataPost(SmsHost, params)
+	res := request.FromDataPost(SmsHost, params, nil, nil)
 	if res.Err != nil {
 		return false
 	}
