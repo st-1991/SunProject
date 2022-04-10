@@ -17,6 +17,7 @@ type UserLogin struct {
 
 type LoginResult struct {
 	UserDetail models.User `json:"user_detail"`
+	Token string `json:"token"`
 }
 
 func SendSms(c *gin.Context) {

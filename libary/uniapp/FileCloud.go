@@ -48,7 +48,7 @@ func (u *UniApp) InitConfig() *UniApp {
 	return u
 }
 
-func (u UniApp) GetSign(params map[string]string) string {
+func (u UniApp) getSign(params map[string]string) string {
 	var keys []string
 	for k := range params {
 		keys = append(keys, k)
@@ -62,7 +62,7 @@ func (u UniApp) GetSign(params map[string]string) string {
 	return config.GenHMACMd5([]byte(signStr), []byte(u.ClientSecret))
 }
 
-func (u UniApp) GetToken() (string, error) {
+func (u UniApp) getToken() (string, error) {
 	params := map[string]string{
 		"method":    "serverless.auth.user.anonymousAuthorize",
 		"params":    "{}",
@@ -70,7 +70,7 @@ func (u UniApp) GetToken() (string, error) {
 		"timestamp": strconv.FormatInt(time.Now().UnixNano() / 1e6, 10),
 	}
 	headers := CommonHeaders()
-	headers["x-serverless-sign"] = u.GetSign(params)
+	headers["x-serverless-sign"] = u.getSign(params)
 	paramsJson, _ := json.Marshal(params)
 	result := request.JsonPost(u.Url, paramsJson, headers)
 	data, err := result.Body()
@@ -90,7 +90,7 @@ func (u UniApp) GetToken() (string, error) {
 	return r.Data.AccessToken, nil
 }
 
-func (u *UniApp) PreUploadFile(filename string) (AliYun, error) {
+func (u *UniApp) preUploadFile(filename string) (AliYun, error) {
 	paramsStruct := struct {
 		FileName string `json:"filename"`
 		Env string `json:"env"`
@@ -99,7 +99,7 @@ func (u *UniApp) PreUploadFile(filename string) (AliYun, error) {
 	paramsStruct.Env = "public"
 	params, _ := json.Marshal(paramsStruct)
 
-	token, err := u.GetToken()
+	token, err := u.getToken()
 	if err != nil {
 		return AliYun{}, err
 	}
@@ -111,7 +111,7 @@ func (u *UniApp) PreUploadFile(filename string) (AliYun, error) {
 		"token" : token,
 	}
 	headers := CommonHeaders()
-	headers["x-serverless-sign"] = u.GetSign(requestParams)
+	headers["x-serverless-sign"] = u.getSign(requestParams)
 	headers["x-basement-token"] = token
 	requestParamsJson, _ := json.Marshal(requestParams)
 	result := request.JsonPost(u.Url, requestParamsJson, headers)
@@ -131,7 +131,7 @@ func (u *UniApp) PreUploadFile(filename string) (AliYun, error) {
 	return dataJson.Data, nil
 }
 
-func (a AliYun) Upload(file *multipart.FileHeader) (string, error){
+func (a AliYun) upload(file *multipart.FileHeader) (string, error){
 	params := map[string][]byte{
 		"Cache-Control": []byte("max-age=2592000"),
 		"Content-Disposition": []byte("attachment"),
@@ -166,18 +166,32 @@ func (a AliYun) Upload(file *multipart.FileHeader) (string, error){
 	return string(data), nil
 }
 
-func (u *UniApp) CompleteUploadFile(id string) bool {
+func (u *UniApp) CompleteUploadFile(file *multipart.FileHeader) (string, error) {
+	// 图片预加载
+	AliYun, err := u.preUploadFile(file.Filename)
+	if err != nil {
+		config.Logger().Error(fmt.Sprintf("图片上传，预加载失败：%s", err))
+		return "", err
+	}
+	// 图片上传
+	_, err = AliYun.upload(file)
+	if err != nil {
+		config.Logger().Error(fmt.Sprintf("图片上传失败：%s", err))
+		return "", err
+	}
+
 	paramsStruct := struct {
 		ID string `json:"id"`
 	}{}
-	paramsStruct.ID = id
+	paramsStruct.ID = AliYun.ID
 	params, _ := json.Marshal(paramsStruct)
 
+	// token不存在重新加载
 	if len(u.Token) == 0 {
-		if token, err := u.GetToken(); err == nil {
+		if token, err := u.getToken(); err == nil {
 			u.Token = token
 		} else {
-			return false
+			return "", err
 		}
 	}
 
@@ -189,20 +203,32 @@ func (u *UniApp) CompleteUploadFile(id string) bool {
 		"token" : u.Token,
 	}
 	headers := CommonHeaders()
-	headers["x-serverless-sign"] = u.GetSign(requestParams)
+	headers["x-serverless-sign"] = u.getSign(requestParams)
 	headers["x-basement-token"] = u.Token
 	requestParamsJson, _ := json.Marshal(requestParams)
 	result := request.JsonPost(u.Url, requestParamsJson, headers)
 	data, err := result.Body()
 	if err != nil {
-		return false
+		return "", err
 	}
 	dataJson := struct {
 		Success bool `json:"success"`
 	}{}
 	_ = json.Unmarshal(data, &dataJson)
 	if 	result.StatusCode() != http.StatusOK || dataJson.Success != true {
-		return false
+		return "", err
 	}
-	return true
+	return "https://" + AliYun.Host + "/" + AliYun.OssPath, nil
+}
+
+func UploadWorker(file *multipart.FileHeader, c chan string)  {
+	go func(file *multipart.FileHeader, c chan string) {
+		uniApp := UniApp{}
+		url, err := uniApp.InitConfig().CompleteUploadFile(file)
+		if err != nil {
+			c <- fmt.Sprintf("预加载失败：%s", err)
+		}
+		c <- url
+		return
+	}(file, c)
 }

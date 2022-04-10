@@ -29,16 +29,6 @@ func UserList(c *gin.Context) {
 	//	ch <- m
 	//}
 	res := make(map[string]interface{})
-	//cd := func(ch chan []models.ApiUser) chan []models.ApiUser {
-	//	c := make(chan []models.ApiUser)
-	//	go func() {
-	//		select {
-	//		case m := <-ch:
-	//			ch <- m
-	//		}
-	//	}()
-	//	return c
-	//}(ch)
 	//users := models.Users()
 	res["users"] = models.Users()
 	ApiResponse(c, &Response{Data: res })
