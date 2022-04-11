@@ -1,7 +1,9 @@
 package controllers
 
 import (
-	"SunProject/models"
+	"SunProject/application/models"
+	"SunProject/application/service"
+	"encoding/json"
 	"github.com/garyburd/redigo/redis"
 	"regexp"
 
@@ -17,7 +19,7 @@ type UserLogin struct {
 
 type LoginResult struct {
 	UserDetail models.User `json:"user_detail"`
-	Token string `json:"token"`
+	Token      service.Token      `json:"token"`
 }
 
 func SendSms(c *gin.Context) {
@@ -47,25 +49,39 @@ func Login(c *gin.Context)  {
 		return
 	}
 
+	rex := regexp.MustCompile(`^(1[3-9][0-9]{9})$`)
+	if res := rex.MatchString(param.Phone); !res {
+		ApiResponse(c, &Response{-1, "手机号不正确！", new([]string)})
+		return
+	}
+
 	redisKey := config.RedisKey("sms:" + param.Phone)
 	code, err := redis.String(redisKey.PrefixKey().Get())
 	if err != nil {
 		ApiResponse(c, &Response{Code: -1, Msg: "请发送验证码！"})
 		return
 	}
-
 	if code != param.Code {
 		ApiResponse(c, &Response{Code: -1, Msg: "验证码错误！"})
 		return
 	}
+
 	User := models.User{Phone: param.Phone}
-	userDetails, err := User.GetUser()
-	if err != nil {
+	userDetails, ok := User.GetUser()
+	if !ok {
 		userDetails = models.User{Phone: param.Phone, Nickname: models.CreateNickname(), Avatar: models.CreateAvatar()}
 		models.CreateUser(&userDetails)
 	}
 
+	userData := service.UserData{ID: userDetails.Id, Phone: userDetails.Phone}
+	userJson, _ := json.Marshal(&userData)
+	j := service.Jwt{}
+	token, err := j.CreateToken("user", string(userJson), 3600 * 1)
+	if err != nil {
+		config.Logger().Error("生成token失败！" + err.Error())
+		ApiResponse(c, &Response{Code: -1, Msg: "系统错误！"})
+	}
 
 	redisKey.PrefixKey().Del()
-	ApiResponse(c, &Response{Data: &LoginResult{UserDetail: userDetails}})
+	ApiResponse(c, &Response{Data: &LoginResult{UserDetail: userDetails, Token: token}})
 }

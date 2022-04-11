@@ -23,7 +23,7 @@ func init() {
 
 	Redis, err = redis.Dial("tcp", "127.0.0.1:6379", redis.DialDatabase(Db))
 	if err != nil {
-		fmt.Println("conn redis failed", err)
+		panic("conn redis failed" + err.Error())
 	}
 }
 
@@ -45,7 +45,7 @@ func (k RedisKey) Get() (reply interface{}, err error) {
 	return Redis.Do("get", k)
 }
 
-func (k RedisKey) Expire(seconds int) bool {
+func (k RedisKey) Expire(seconds int64) bool {
 	_, err := Redis.Do("expire", k, seconds)
 	if err != nil {
 		return false

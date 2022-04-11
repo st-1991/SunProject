@@ -1,8 +1,8 @@
 package main
 
 import (
+	"SunProject/application/middleware"
 	"SunProject/config"
-	"SunProject/middleware"
 	"SunProject/router"
 
 	"github.com/gin-gonic/gin"

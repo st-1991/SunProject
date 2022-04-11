@@ -9,6 +9,8 @@ require (
 	github.com/gomodule/redigo v1.8.8 // indirect
 	github.com/jinzhu/gorm v1.9.16 // indirect
 	github.com/mattn/go-sqlite3 v1.14.12 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/robbert229/jwt v2.0.0+incompatible // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/viper v1.3.2 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect

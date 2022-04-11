@@ -1,14 +1,27 @@
 package controllers
 
 import (
-	"SunProject/config"
-	"SunProject/models"
+	"SunProject/application/models"
 	"github.com/gin-gonic/gin"
 )
 
 func UserInfo(c *gin.Context) {
-	res := config.Result{}
-	res.Success(c)
+
+	if isLogin, ok := c.Get("isLogin"); !ok || isLogin.(bool) == false {
+		ApiResponse(c, &Response{Code: 4444, Msg: "请先登录"})
+		return
+	}
+	userId := c.MustGet("userId").(int)
+
+	user := models.User{Id: userId}
+	user, ok := user.GetUser()
+	if !ok {
+		ApiResponse(c, &Response{Code: -1, Msg: "用户不存在"})
+		return
+	}
+	ApiResponse(c, &Response{Code: 0, Msg: "success", Data: map[string]models.User{
+		"user": user,
+	}})
 }
 
 func UserList(c *gin.Context) {
