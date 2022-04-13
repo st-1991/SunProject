@@ -13,8 +13,7 @@ func UserInfo(c *gin.Context) {
 	}
 	userId := c.MustGet("userId").(int)
 
-	user := models.User{Id: userId}
-	user, ok := user.GetUser()
+	user, ok := models.GetUser("", userId)
 	if !ok {
 		ApiResponse(c, &Response{Code: -1, Msg: "用户不存在"})
 		return

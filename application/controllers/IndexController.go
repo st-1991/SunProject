@@ -1,14 +1,14 @@
 package controllers
 
 import (
-	"SunProject/application/models"
-	"SunProject/application/service"
 	"encoding/json"
-	"github.com/garyburd/redigo/redis"
 	"regexp"
 
+	"github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
 
+	"SunProject/application/models"
+	"SunProject/application/service"
 	"SunProject/config"
 )
 
@@ -67,10 +67,15 @@ func Login(c *gin.Context)  {
 	}
 
 	User := models.User{Phone: param.Phone}
-	userDetails, ok := User.GetUser()
+	userDetails, ok := models.GetUser(param.Phone, 0)
 	if !ok {
-		userDetails = models.User{Phone: param.Phone, Nickname: models.CreateNickname(), Avatar: models.CreateAvatar()}
-		models.CreateUser(&userDetails)
+		User = models.User{Phone: param.Phone, Nickname: models.CreateNickname(), Avatar: models.CreateAvatar(), Sex: 1}
+		ok := User.CreateUser()
+		if !ok {
+			ApiResponse(c, &Response{Code: -1, Msg: "登陆失败，请重试！"})
+			return
+		}
+		userDetails, _ = models.GetUser("", User.Id)
 	}
 
 	userData := service.UserData{ID: userDetails.Id, Phone: userDetails.Phone}

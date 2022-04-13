@@ -1,9 +1,9 @@
 package models
 
 import (
+	"SunProject/application/models/custom"
 	"SunProject/config"
 	"fmt"
-	"time"
 )
 
 
@@ -19,8 +19,8 @@ type User struct {
 	Fans int `json:"fans" gorm:"type:int(0);not null;default: 0;comment:粉丝数"`
 	Focus int `json:"focus" gorm:"type:int(0);not null;default: 0;comment:关注数"`
 	Balance float64 `json:"balance" gorm:"type:decimal(11, 2);not null;default:0.00;comment:余额"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt custom.JTime `json:"created_at" gorm:"type:timestamp;not null;default:CURRENT_TIMESTAMP;comment:创建时间"`
+	UpdatedAt custom.JTime `json:"updated_at" gorm:"type:timestamp;not null;default:CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;comment:更新时间"`
 }
 
 func (User) TableName() string {
@@ -51,8 +51,8 @@ func Users() []ApiUser {
 	return users
 }
 
-func CreateUser(user *User) bool {
-	res := config.DB.Table(TableName).Create(user)
+func (u *User) CreateUser() bool {
+	res := config.DB.Create(u)
 	if res.Error != nil {
 		return false
 	}
@@ -60,10 +60,17 @@ func CreateUser(user *User) bool {
 }
 
 // GetUser 获取用户详情
-func (u *User) GetUser() (User, bool) {
+func GetUser(phone string, id int) (User, bool) {
 	var user User
-	config.DB.Where(u).First(&user)
-	if (&user).Id == 0 {
+	query := config.DB.Table(TableName)
+	if phone != "" {
+		query.Where("phone = ?", phone)
+	}
+	if id != 0 {
+		query.Where("id = ?", id)
+	}
+	query.First(&user)
+	if (user).Id == 0 {
 		return user, false
 	}
 	return user, true

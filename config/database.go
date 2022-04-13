@@ -13,7 +13,7 @@ import (
 var DB *gorm.DB
 
 func v(name string) string {
-	env := "test."
+	env := "debug."
 	return viper.GetString(env + name)
 }
 
