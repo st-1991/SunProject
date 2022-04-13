@@ -10,10 +10,11 @@ import (
 
 func Logger() *logrus.Logger {
 	now := time.Now()
-	logFilePath := ""
-	if dir, err := os.Getwd(); err == nil {
-		logFilePath = dir + "/logs/"
-	}
+	//logFilePath := "/Users/weiche/logs/go"
+	logFilePath := "/Users/weiche/logs/go"
+	//if dir, err := os.Getwd(); err == nil {
+	//	logFilePath = dir + "/logs/"
+	//}
 	if err := os.MkdirAll(logFilePath, 0777); err != nil {
 		fmt.Println(err.Error())
 	}
