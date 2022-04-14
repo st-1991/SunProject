@@ -21,9 +21,9 @@ func KeepLogin() gin.HandlerFunc {
 			}
 			if userData, err := token.GetUserInfo("user"); err == nil {
 				c.Set("userId", userData.ID)
+				isLogin = true
 			}
 		}
-		isLogin = true
 		c.Set("isLogin", isLogin)
 		c.Header("Access-Control-Allow-Headers", "*")
 		c.Next()

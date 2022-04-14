@@ -7,10 +7,10 @@ debug:
 
 test:
   datatype: mysql
-  hostname: 112.126.61.95
-  database: keep_happy
-  username: keep
-  password: 88888888
+  hostname: bj-cynosdbmysql-grp-4febov7e.sql.tencentcdb.com
+  database: sjds-test
+  username: suntao
+  password: SunTao123
 
 release:
   datatype: mysql

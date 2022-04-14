@@ -69,13 +69,18 @@ func Login(c *gin.Context)  {
 	User := models.User{Phone: param.Phone}
 	userDetails, ok := models.GetUser(param.Phone, 0)
 	if !ok {
-		User = models.User{Phone: param.Phone, Nickname: models.CreateNickname(), Avatar: models.CreateAvatar(), Sex: 1}
+		User = models.User{Phone: param.Phone, Nickname: models.CreateNickname(), Avatar: models.CreateAvatar(), Sex: "1", Ip: c.ClientIP()}
 		ok := User.CreateUser()
 		if !ok {
 			ApiResponse(c, &Response{Code: -1, Msg: "登陆失败，请重试！"})
 			return
 		}
 		userDetails, _ = models.GetUser("", User.Id)
+	} else {
+		go func(userId int, ip string) {
+			user := models.User{Id: userId, Ip: ip}
+			user.EditUser()
+		}(userDetails.Id, c.ClientIP())
 	}
 
 	userData := service.UserData{ID: userDetails.Id, Phone: userDetails.Phone}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"SunProject/application/middleware"
+	"SunProject/application/models"
 	"SunProject/config"
 	"SunProject/router"
 
@@ -13,11 +14,14 @@ func main() {
 	// 禁用控制台颜色，将日志写入文件时不需要控制台颜色。
 	gin.DisableConsoleColor()
 
-	//if !config.DB.Migrator().HasTable(&models.User{}) {
-	//	if err := config.DB.Migrator().CreateTable(&models.User{}); err != nil {
-	//		panic(err)
-	//	}
-	//}
+	tables := models.Tables()
+	for _, table := range tables {
+		if !config.DB.Migrator().HasTable(table) {
+			if err := config.DB.Migrator().CreateTable(table); err != nil {
+				panic(err)
+			}
+		}
+	}
 
 	engine := gin.Default()
 	engine.Use(middleware.LoggerToFile())

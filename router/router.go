@@ -16,11 +16,13 @@ func (r *Route) Run() {
 	{
 		api.GET("/send_sms", controllers.SendSms)
 		api.POST("/login", controllers.Login)
+		api.GET("/tabs", controllers.Tabs)
 	}
 
 	apiNeedToken := r.Engine.Group("/api").Use(middleware.KeepLogin())
 	{
-		apiNeedToken.GET("/user_info", controllers.UserInfo)
+		apiNeedToken.GET("/user/info", controllers.UserInfo)
+		apiNeedToken.POST("/user/edit", controllers.EditUser)
 		apiNeedToken.GET("/users", controllers.UserList)
 		apiNeedToken.POST("/upload_file", controllers.UploadFile)
 	}
