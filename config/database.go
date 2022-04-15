@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
@@ -13,8 +14,7 @@ import (
 var DB *gorm.DB
 
 func v(name string) string {
-	env := "test."
-	return viper.GetString(env + name)
+	return viper.GetString(	gin.Mode()+ name)
 }
 
 type Writer struct {

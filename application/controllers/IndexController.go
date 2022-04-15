@@ -27,7 +27,7 @@ func SendSms(c *gin.Context) {
 
 	rex := regexp.MustCompile(`^(1[3-9][0-9]{9})$`)
 	if res := rex.MatchString(phone); !res {
-		ApiResponse(c, &Response{-1, "手机号不正确！", new([]string)})
+		ApiError(c, &Response{-1, "手机号不正确！", nil})
 		return
 	}
 	code := config.CreateCode()

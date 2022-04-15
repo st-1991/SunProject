@@ -3,19 +3,27 @@ package controllers
 import (
 	"SunProject/application/models"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
+
+func IsLogin(c *gin.Context) bool {
+	if isLogin, ok := c.Get("isLogin"); !ok || isLogin.(bool) == false {
+		ApiError(c, &Response{Code: 4444, Msg: "请先登录"}, http.StatusUnauthorized)
+		return false
+	}
+	return true
+}
 
 // UserInfo 用户详情
 func UserInfo(c *gin.Context) {
-	if isLogin, ok := c.Get("isLogin"); !ok || isLogin.(bool) == false {
-		ApiResponse(c, &Response{Code: 4444, Msg: "请先登录"})
+	if !IsLogin(c) {
 		return
 	}
 	userId := c.MustGet("userId").(int)
 
 	user, ok := models.GetUser("", userId)
 	if !ok {
-		ApiResponse(c, &Response{Code: -1, Msg: "用户不存在"})
+		ApiError(c, &Response{Code: -1, Msg: "用户不存在"})
 		return
 	}
 	ApiResponse(c, &Response{Code: 0, Msg: "success", Data: map[string]models.User{
@@ -25,8 +33,7 @@ func UserInfo(c *gin.Context) {
 
 // EditUser 编辑用户信息
 func EditUser(c *gin.Context)  {
-	if isLogin, ok := c.Get("isLogin"); !ok || isLogin.(bool) == false {
-		ApiResponse(c, &Response{Code: 4444, Msg: "请先登录"})
+	if !IsLogin(c) {
 		return
 	}
 	userId := c.MustGet("userId").(int)
@@ -46,7 +53,7 @@ func EditUser(c *gin.Context)  {
 	}
 	res := user.EditUser()
 	if !res {
-		ApiResponse(c, &Response{Code: -1, Msg: "编辑资料失败，请重试！"})
+		ApiError(c, &Response{Code: -1, Msg: "编辑资料失败，请重试！"})
 		return
 	}
 	ApiResponse(c, &Response{})

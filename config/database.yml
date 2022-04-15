@@ -1,9 +1,9 @@
 debug:
   datatype: mysql
-  hostname: localhost
-  database: keep_happy
-  username: root
-  password: "000000"
+  hostname: bj-cynosdbmysql-grp-4febov7e.sql.tencentcdb.com
+  database: sjds-test
+  username: suntao
+  password: SunTao123
 
 test:
   datatype: mysql
