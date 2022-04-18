@@ -3,9 +3,12 @@ package config
 import (
 	"crypto/hmac"
 	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"io"
 	"math/rand"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"time"
@@ -57,4 +60,17 @@ func GenHMACMd5(ciphertext, key []byte) string {
 	return fmt.Sprintf("%x", hmac)
 }
 
-
+func GetFileMd5(file *multipart.FileHeader) string {
+	src, err := file.Open()
+	if err != nil {
+		return ""
+	}
+	defer src.Close()
+	if err != nil {
+		fmt.Errorf("打开文件失败，filename=%v, err=%v", file.Filename, err)
+		return ""
+	}
+	md5h := md5.New()
+	io.Copy(md5h, src)
+	return hex.EncodeToString(md5h.Sum(nil))
+}

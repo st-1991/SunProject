@@ -223,6 +223,7 @@ func (u *UniApp) CompleteUploadFile(file *multipart.FileHeader) (string, error) 
 
 func UploadWorker(file *multipart.FileHeader, c chan string)  {
 	go func(file *multipart.FileHeader, c chan string) {
+		//fmt.Println(config.GetFileMd5(file))
 		uniApp := UniApp{}
 		url, err := uniApp.InitConfig().CompleteUploadFile(file)
 		if err != nil {

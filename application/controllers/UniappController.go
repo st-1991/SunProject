@@ -11,12 +11,6 @@ func UploadFile(c *gin.Context) {
 	var fileUrls []string
 	ch := make(chan string, len(files))
 	for _, file := range files {
-		//UniApp := uniapp.UniApp{}
-		//url, err := UniApp.InitConfig().CompleteUploadFile(file)
-		//if err != nil {
-		//	errs = append(errs, fmt.Errorf("预加载失败：%s", err))
-		//}
-		//fileUrls = append(fileUrls, url)
 		uniapp.UploadWorker(file, ch)
 	}
 	for {
