@@ -13,8 +13,7 @@ func main() {
 	defer config.Redis.Close()
 	// 禁用控制台颜色，将日志写入文件时不需要控制台颜色。
 	gin.DisableConsoleColor()
-	gin.SetMode(gin.DebugMode)
-
+	//gin.SetMode(gin.DebugMode)
 
 	tables := models.Tables()
 	for _, table := range tables {
