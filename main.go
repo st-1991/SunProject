@@ -15,6 +15,7 @@ func main() {
 	gin.DisableConsoleColor()
 	//gin.SetMode(gin.DebugMode)
 
+
 	tables := models.Tables()
 	for _, table := range tables {
 		if !config.DB.Migrator().HasTable(table) {

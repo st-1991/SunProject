@@ -14,7 +14,7 @@ import (
 var DB *gorm.DB
 
 func v(name string) string {
-	return viper.GetString(gin.Mode()+ name)
+	return viper.GetString(gin.Mode() + "." + name)
 }
 
 type Writer struct {
