@@ -45,11 +45,7 @@ type ApiUser struct {
 }
 
 func (u *User) CreateUser() bool {
-	res := config.DB.Create(u)
-	if res.Error != nil {
-		return false
-	}
-	return true
+	return config.DB.Create(u).Error == nil
 }
 
 func (u *User) EditUser() bool {

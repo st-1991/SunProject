@@ -1,6 +1,7 @@
 package uniapp
 
 import (
+	"SunProject/application/models"
 	"SunProject/config"
 	"SunProject/libary/request"
 	"encoding/json"
@@ -22,6 +23,12 @@ func CommonHeaders() map[string]string {
 		"connection": "close",
 		"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36",
 	}
+}
+
+type FileResult struct {
+	FileName string `json:"file_name"`
+	FileUrl string `json:"file_url"`
+	Err error `json:"err"`
 }
 
 type UniApp struct {
@@ -221,15 +228,49 @@ func (u *UniApp) CompleteUploadFile(file *multipart.FileHeader) (string, error) 
 	return "https://" + AliYun.Host + "/" + AliYun.OssPath, nil
 }
 
-func UploadWorker(file *multipart.FileHeader, c chan string)  {
-	go func(file *multipart.FileHeader, c chan string) {
-		//fmt.Println(config.GetFileMd5(file))
+func uploadWorker(file *multipart.FileHeader, ch chan FileResult)  {
+	go func(file *multipart.FileHeader, c chan FileResult) {
+		fileMd5 := config.GetFileMd5(file)
+		if fileMd5 != "" {
+			fileModel := models.Files{FileMd5: fileMd5}
+			fileModel = fileModel.GetFileByMd5()
+			if fileModel.Id != 0 {
+				c <- FileResult{Err: nil, FileName: file.Filename, FileUrl: fileModel.FileUrl}
+				return
+			}
+		}
 		uniApp := UniApp{}
 		url, err := uniApp.InitConfig().CompleteUploadFile(file)
 		if err != nil {
-			c <- fmt.Sprintf("预加载失败：%s", err)
+			c <- FileResult{Err: fmt.Errorf("预加载失败：%s", err), FileName: file.Filename}
+			return
 		}
-		c <- url
+		res := FileResult{Err: nil, FileName: file.Filename, FileUrl: url}
+
+		go func(fileResult FileResult, fileMd5 string) {
+			fileModel := models.Files{FileMd5: fileMd5, FileUrl: fileResult.FileUrl, FileName: fileResult.FileName}
+			if !fileModel.CreateFile() {
+				config.Logger().Error(fmt.Sprintf("文件名：%s 数据库添加失败", fileModel.FileName))
+			}
+			return
+		}(res, fileMd5)
+		c <- res
 		return
-	}(file, c)
+	}(file, ch)
+}
+
+func UploadFiles(files []*multipart.FileHeader) []FileResult{
+	fileCh := make(chan FileResult, len(files))
+	for _, file := range files {
+		uploadWorker(file, fileCh)
+	}
+	var fileUrls []FileResult
+	for {
+		if len(fileUrls)  == len(files) {
+			break
+		}
+		f := <-fileCh
+		fileUrls = append(fileUrls, f)
+	}
+	return fileUrls
 }

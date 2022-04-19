@@ -11,5 +11,8 @@ func Tables() []interface{} {
 	return []interface{}{
 		&User{},
 		&Tabs{},
+		&Comments{},
+		&Files{},
+		&Dynamic{},
 	}
 }
