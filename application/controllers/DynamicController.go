@@ -2,11 +2,22 @@ package controllers
 
 import (
 	"encoding/json"
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 
 	"SunProject/application/models"
+	"SunProject/application/service"
 	"SunProject/libary/uniapp"
 )
+
+type recommendDynamic struct {
+	models.ApiDynamic
+	Avatar string `json:"avatar"`
+	Nickname string `json:"nickname"`
+	IsThumbUp bool `json:"is_thumb_up"`
+	Images []string `json:"images"`
+}
 
 func AddDynamic(c *gin.Context) {
 	if !IsLogin(c) {
@@ -47,4 +58,62 @@ func AddDynamic(c *gin.Context) {
 		return
 	}
 	ApiResponse(c, &Response{Code: 0, Msg: "发布动态成功～"})
+}
+
+// RecommendDynamics 推荐动态
+func RecommendDynamics(c *gin.Context) {
+	pageStr := c.DefaultQuery("page", "1")
+	pageSizeStr := c.DefaultQuery("pageSize", "10")
+	page, _ := strconv.Atoi(pageStr)
+	pageSize, _ := strconv.Atoi(pageSizeStr)
+	var recommendDynamics []recommendDynamic
+	var d models.Dynamic
+	var userIds []int
+
+	dynamics := d.GetDynamics(page, pageSize)
+	for _, dynamic := range dynamics {
+		userIds = append(userIds, dynamic.UserId)
+	}
+	u := models.User{}
+	users := u.GetUsersByIds(userIds)
+	usersMap := make(map[int]models.UserBase)
+	for _, user := range users{
+		usersMap[user.Id] = user
+	}
+	for _, dynamic := range dynamics {
+		var rd recommendDynamic
+		ud := service.UserDynamic{
+			Id: dynamic.Id,
+			UserId: c.GetInt("userId"),
+		}
+		_ = json.Unmarshal([]byte(dynamic.Images), &rd.Images)
+		rd.ApiDynamic = dynamic
+		rd.Avatar = usersMap[dynamic.UserId].Avatar
+		rd.Nickname = usersMap[dynamic.UserId].Nickname
+		rd.IsThumbUp = ud.IsThumbUp()
+		recommendDynamics = append(recommendDynamics, rd)
+	}
+	ApiResponse(c, &Response{Code: 0, Data: recommendDynamics})
+}
+
+func DynamicThumbUp(c *gin.Context) {
+	if !IsLogin(c) {
+		return
+	}
+	userId := c.GetInt("userId")
+	dIdStr := c.PostForm("d_id")
+	if dIdStr == "" {
+		ApiError(c, &Response{Code: -1, Msg: "参数错误：d_id is empty"})
+		return
+	}
+	dId, err := strconv.Atoi(dIdStr)
+	if err != nil {
+		ApiError(c, &Response{Code: -1, Msg: "参数错误：d_id is not int"})
+		return
+	}
+	go service.DynamicThumbUp(service.UserDynamic{
+		UserId: userId,
+		Id: dId,
+	})
+	ApiResponse(c, &Response{Code: 0, Msg: "点赞完成～"})
 }

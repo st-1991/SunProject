@@ -4,7 +4,9 @@ package models
 type Comments struct {
 	Id int `json:"id" gorm:"primaryKey"`
 	DynamicId int `json:"dynamic_id" gorm:"index:idx_DynamicId;type:int(11);not null;default:0;comment:动态id"`
-	ParentCommentId int `json:"parent_comment_id" gorm:"index:idx_ParentCommentId;type:int(11);not null;default:0;comment:父评论id"`
+	TopCommentId int `json:"top_comment_id" gorm:"index:idx_TopCommentId;type:int(11);not null;default:0;comment:父评论id"`
+	ParentCommentId int `json:"parent_comment_id" gorm:"type:int(11);not null;default:0;comment:父评论id"`
+	ParentCommentUserId int `json:"parent_comment_user_id" gorm:"type:int(11);not null;default:0;comment:父评论用户id"`
 	Level int `json:"level" gorm:"type:int(2);not null;default:0;comment:评论层级"`
 	UserId int `json:"user_id" gorm:"index:idx_userId;type:int(11);not null;default:0;comment:用户id"`
 	Text string `json:"text" gorm:"type:varchar(255);not null;default:'';comment:评论文案;"`

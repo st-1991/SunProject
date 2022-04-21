@@ -26,9 +26,7 @@ func UserInfo(c *gin.Context) {
 		ApiError(c, &Response{Code: -1, Msg: "用户不存在"})
 		return
 	}
-	ApiResponse(c, &Response{Code: 0, Msg: "success", Data: map[string]models.User{
-		"user": user,
-	}})
+	ApiResponse(c, &Response{Code: 0, Msg: "success", Data: user})
 }
 
 // EditUser 编辑用户信息

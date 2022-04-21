@@ -25,6 +25,9 @@ func (r *Route) Run() {
 		apiNeedToken.POST("/user/edit", controllers.EditUser)
 		apiNeedToken.GET("/users", controllers.UserList)
 		apiNeedToken.POST("/upload_file", controllers.UploadFile)
+
 		apiNeedToken.POST("/dynamic/add", controllers.AddDynamic)
+		apiNeedToken.GET("/dynamic/recommend", controllers.RecommendDynamics)
+		apiNeedToken.POST("/dynamic/thumb", controllers.DynamicThumbUp)
 	}
 }

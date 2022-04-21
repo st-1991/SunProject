@@ -3,6 +3,7 @@ package models
 import (
 	"SunProject/config"
 	"fmt"
+	"gorm.io/gorm"
 )
 
 
@@ -73,6 +74,18 @@ func GetUser(phone string, id int) (User, bool) {
 	return user, true
 }
 
+type UserBase struct {
+	Id int `json:"id"`
+	Avatar string `json:"avatar"`
+	Nickname string `json:"nickname"`
+}
+
+func (u *User) GetUsersByIds(ids []int) []UserBase {
+	var result []UserBase
+	config.DB.Model(u).Select("id", "avatar", "nickname").Where(ids).Find(&result)
+	return result
+}
+
 // CreateNickname 生成用户昵称
 func CreateNickname() string {
 	return fmt.Sprintf("小可爱-%s", config.CreateCode())
@@ -80,4 +93,12 @@ func CreateNickname() string {
 
 func CreateAvatar() string {
 	return "http://www.gravatar.com/avatar/"
+}
+
+// SetThumbUp 点赞
+func (u User) SetThumbUp(DB *gorm.DB) bool {
+	if u.Id == 0 {
+		return false
+	}
+	return DB.Model(&u).Where("id = ?", u.Id).Update("thumb_up", gorm.Expr("thumb_up + ?", 1)).Error == nil
 }

@@ -1,6 +1,9 @@
 package models
 
-import "SunProject/config"
+import (
+	"SunProject/config"
+	"gorm.io/gorm"
+)
 
 // Dynamic 动态表.
 type Dynamic struct {
@@ -16,11 +19,31 @@ type Dynamic struct {
 	Date `gorm:"embedded"`
 }
 
+type ApiDynamic struct {
+	Id int `json:"id"`
+	UserId int `json:"user_id"`
+	Text string `json:"text"`
+	Images string `json:"images"`
+}
+
 func (d Dynamic) TableName() string {
 	return "keep_dynamic"
 }
 
 func (d Dynamic) CreateDynamic() bool {
 	return config.DB.Create(&d).Error == nil
+}
+
+func (d Dynamic) GetDynamics(page, pageSize int) []ApiDynamic {
+	var dynamics []ApiDynamic
+	config.DB.Model(&d).Where("deleted = ?", 0).Offset((page - 1) * pageSize).Limit(pageSize).Order("id desc").Find(&dynamics)
+	return dynamics
+}
+
+func (d Dynamic) SetThumbUp(DB *gorm.DB) bool {
+	if d.Id == 0 {
+		return false
+	}
+	return DB.Model(&d).Where("id = ?", d.Id).Update("thumb_up", gorm.Expr("thumb_up + ?", 1)).Error == nil
 }
 

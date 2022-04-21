@@ -74,3 +74,13 @@ func GetFileMd5(file *multipart.FileHeader) string {
 	io.Copy(md5h, src)
 	return hex.EncodeToString(md5h.Sum(nil))
 }
+
+func SliceColumn(input []map[string]interface{}, columnKey string) []interface{} {
+	columns := make([]interface{}, 0, len(input))
+	for _, val := range input {
+		if v, ok := val[columnKey]; ok {
+			columns = append(columns, v)
+		}
+	}
+	return columns
+}
