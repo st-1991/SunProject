@@ -28,6 +28,7 @@ func (r *Route) Run() {
 
 		apiNeedToken.POST("/dynamic/add", controllers.AddDynamic)
 		apiNeedToken.GET("/dynamic/recommend", controllers.RecommendDynamics)
-		apiNeedToken.POST("/dynamic/thumb", controllers.DynamicThumbUp)
+		apiNeedToken.GET("/dynamic/thumb/:dId", controllers.DynamicThumbUp)
+		apiNeedToken.POST("/comment/add", controllers.AddComment)
 	}
 }

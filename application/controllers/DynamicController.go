@@ -33,26 +33,23 @@ func AddDynamic(c *gin.Context) {
 	}
 	form, _ := c.MultipartForm()
 	files := form.File["files[]"]
-	fileUrls := uniapp.UploadFiles(files)
 	var images []string
-	urlMap := make(map[string]string)
-	for _, url := range fileUrls {
-		if url.Err == nil {
-			urlMap[url.FileName] = url.FileUrl
+	if len(files) > 0 {
+		fileUrls := uniapp.UploadFiles(files)
+		urlMap := make(map[string]string)
+		for _, url := range fileUrls {
+			if url.Err == nil {
+				urlMap[url.FileName] = url.FileUrl
+			}
+		}
+		for _, file := range files {
+			if fileUrl, ok := urlMap[file.Filename]; ok {
+				images = append(images, fileUrl)
+			}
 		}
 	}
-
-	for _, file := range files {
-		if fileUrl, ok := urlMap[file.Filename]; ok {
-			images = append(images, fileUrl)
-		}
-	}
-	imagesStr := ""
-	if len(images) > 0 {
-		filesJson, _ := json.Marshal(images)
-		imagesStr = string(filesJson)
-	}
-	dynamic := models.Dynamic{Text: text, Tag: tag, Images: imagesStr, UserId: userId}
+	filesJson, _ := json.Marshal(images)
+	dynamic := models.Dynamic{Text: text, Tag: tag, Images: string(filesJson), UserId: userId}
 	if !dynamic.CreateDynamic() {
 		ApiError(c, &Response{Code: -1, Msg: "发布动态失败，请重试～"})
 		return
@@ -101,11 +98,7 @@ func DynamicThumbUp(c *gin.Context) {
 		return
 	}
 	userId := c.GetInt("userId")
-	dIdStr := c.PostForm("d_id")
-	if dIdStr == "" {
-		ApiError(c, &Response{Code: -1, Msg: "参数错误：d_id is empty"})
-		return
-	}
+	dIdStr := c.Param("dId")
 	dId, err := strconv.Atoi(dIdStr)
 	if err != nil {
 		ApiError(c, &Response{Code: -1, Msg: "参数错误：d_id is not int"})
