@@ -40,10 +40,14 @@ func (d Dynamic) GetDynamics(page, pageSize int) []ApiDynamic {
 	return dynamics
 }
 
-func (d Dynamic) SetThumbUp(DB *gorm.DB) bool {
+func (d Dynamic) IncrColumn(DB *gorm.DB, column string) bool {
 	if d.Id == 0 {
 		return false
 	}
-	return DB.Model(&d).Where("id = ?", d.Id).Update("thumb_up", gorm.Expr("thumb_up + ?", 1)).Error == nil
+	allowColumns := []string{"thumb_up", "comment_num"}
+	if !config.InArray(column, allowColumns) {
+		return false
+	}
+	return DB.Model(&d).Where("id = ?", d.Id).Update(column, gorm.Expr(column + " + ?", 1)).Error == nil
 }
 

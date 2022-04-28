@@ -80,5 +80,6 @@ func AddComment(c *gin.Context) {
 		ApiError(c, &Response{Code: -1, Msg: "评论失败～"})
 		return
 	}
+	// 评论数加1
 	ApiResponse(c, &Response{})
 }

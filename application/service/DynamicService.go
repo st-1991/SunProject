@@ -23,7 +23,7 @@ func DynamicThumbUp(ud UserDynamic) {
 	db := config.DB.Begin()
 	// 增加动态点赞数
 	d := models.Dynamic{Id: ud.Id}
-	if dOk := d.SetThumbUp(db); !dOk {
+	if dOk := d.IncrColumn(db, "thumb_up"); !dOk {
 		ud.delThumbUpCache()
 		db.Rollback()
 		return

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"mime/multipart"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -19,21 +20,29 @@ type recommendDynamic struct {
 	Images []string `json:"images"`
 }
 
+type AddDynamicParam struct {
+	Text string `form:"text"`
+	Tag string `form:"tag"`
+	GoodId int `form:"good_id"`
+	Images []*multipart.FileHeader `form:"images"`
+}
+
 func AddDynamic(c *gin.Context) {
 	if !IsLogin(c) {
 		return
 	}
 	userId := c.GetInt("userId")
-	text := c.PostForm("text")
-	tag := c.PostForm("tag")
-	//goodId := c.PostForm("goodId")
-	if text == "" {
+	var dParam AddDynamicParam
+	if c.Bind(&dParam) != nil {
+		ApiError(c, &Response{Code: -1, Msg: "参数绑定错误"})
+		return
+	}
+	if dParam.Text == "" {
 		ApiError(c, &Response{Code: -1, Msg: "请填写动态内容哦"})
 		return
 	}
-	form, _ := c.MultipartForm()
-	files := form.File["files[]"]
-	var images []string
+	files := dParam.Images
+	images := make([]string, 0)
 	if len(files) > 0 {
 		fileUrls := uniapp.UploadFiles(files)
 		urlMap := make(map[string]string)
@@ -49,7 +58,7 @@ func AddDynamic(c *gin.Context) {
 		}
 	}
 	filesJson, _ := json.Marshal(images)
-	dynamic := models.Dynamic{Text: text, Tag: tag, Images: string(filesJson), UserId: userId}
+	dynamic := models.Dynamic{Text: dParam.Text, Tag: dParam.Tag, Images: string(filesJson), UserId: userId}
 	if !dynamic.CreateDynamic() {
 		ApiError(c, &Response{Code: -1, Msg: "发布动态失败，请重试～"})
 		return
