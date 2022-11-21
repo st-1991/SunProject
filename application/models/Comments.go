@@ -2,6 +2,7 @@ package models
 
 import (
 	"SunProject/config"
+	"gorm.io/gorm"
 )
 
 // Comments 评论表.
@@ -41,4 +42,28 @@ func GetCommenterInfoById(commentId int) CommenterInfo {
 	cInfo := CommenterInfo{}
 	config.DB.Model(&Comments{}).Select("id, top_comment_id, level, user_id").Where("id = ?", commentId).First(&cInfo)
 	return cInfo
+}
+
+func (c Comments) IncrColumn(DB *gorm.DB, column string) bool {
+	if c.Id == 0 {
+		return false
+	}
+	allowColumns := []string{"thumb_up", "comment_num"}
+	if !config.InArray(column, allowColumns) {
+		return false
+	}
+	return DB.Model(&c).Where("id = ?", c.Id).Update(column, gorm.Expr(column + " + ?", 1)).Error == nil
+}
+
+
+func GetCommentsById(id, level, page, pageSize int) []Comments {
+	var comments []Comments
+	db := config.DB.Model(&Comments{}).Where("deleted = ?", 0).Where("level = ?", level)
+	if level == 1 {
+		db = db.Where("dynamic_id = ?", id)
+	} else {
+		db.Where("top_comment_id = ?", id)
+	}
+	db.Offset((page - 1) * pageSize).Limit(pageSize).Find(&comments)
+	return comments
 }

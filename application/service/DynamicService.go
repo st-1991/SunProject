@@ -71,3 +71,19 @@ func (ud UserDynamic) IsThumbUp() bool {
 	}
 	return isTU
 }
+
+func AddCommentNum(id, commentId,level int) {
+	if level == 1 {
+		// 增加评论数
+		d := models.Dynamic{Id: id}
+		if dOk := d.IncrColumn(config.DB, "comment_num"); !dOk {
+			config.Logger().Error("增加评论数失败")
+		}
+	} else {
+		// 增加回复数
+		c := models.Comments{Id: commentId}
+		if cOk := c.IncrColumn(config.DB, "comment_num"); !cOk {
+			config.Logger().Error("增加回复数失败")
+		}
+	}
+}

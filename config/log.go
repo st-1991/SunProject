@@ -10,7 +10,7 @@ import (
 
 func Logger() *logrus.Logger {
 	now := time.Now()
-	logFilePath := "/Users/weiche/logs/go"
+	logFilePath := "/Users/suntao/logs/go"
 	//if dir, err := os.Getwd(); err == nil {
 	//	logFilePath = dir + "/logs/"
 	//}
