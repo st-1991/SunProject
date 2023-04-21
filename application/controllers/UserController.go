@@ -37,17 +37,11 @@ func EditUser(c *gin.Context)  {
 	userId := c.MustGet("userId").(int)
 	avatar := c.PostForm("avatar")
 	nickname := c.PostForm("nickname")
-	sex := c.PostForm("sex")
-	birthday := c.PostForm("birthday")
-	profile := c.PostForm("profile")
 
 	user := models.User{
 		Id: userId,
 		Avatar: avatar,
 		Nickname: nickname,
-		Sex: sex,
-		Birthday: birthday,
-		Profile: profile,
 	}
 	res := user.EditUser()
 	if !res {

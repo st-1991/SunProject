@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+var ProjectPath string
+
 type Result struct {
 	Data interface{} `json:"data"`
 	Status int `json:"status"`

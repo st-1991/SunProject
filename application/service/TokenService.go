@@ -21,7 +21,7 @@ type Token string
 
 type UserData struct {
 	ID int `json:"id"`
-	Phone string `json:"phone"`
+	Account string `json:"account"`
 }
 
 func (j *Jwt) initJwt() {

@@ -51,7 +51,7 @@ func init() {
 		},
 	)
 
-	dns := fmt.Sprintf("%s:%s@tcp(%s:28408)/%s?charset=utf8&parseTime=True&loc=Local&timeout=2s", v("username"), v("password"), v("hostname"), v("database"))
+	dns := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?charset=utf8&parseTime=True&loc=Local&timeout=2s", v("username"), v("password"), v("hostname"), v("database"))
 	var err error
 	DB, err = gorm.Open(mysql.Open(dns), &gorm.Config{
 		Logger: newLogger,
