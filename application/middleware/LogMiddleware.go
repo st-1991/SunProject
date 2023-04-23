@@ -18,6 +18,7 @@ func LoggerToFile() gin.HandlerFunc {
 		c.Header("Access-Control-Allow-Origin", "*")
 		c.Header("Access-Control-Allow-Methods", "GET,POST,OPTIONS,PUT,DELETED,PATCH")
 		c.Header("Access-Control-Allow-Credentials", "true")
+		c.Header("Access-Control-Max-Age", "3600")
 		// 处理请求
 		c.Next()
 
