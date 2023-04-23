@@ -69,7 +69,7 @@ func SendSms(c *gin.Context) {
 
 func Login(c *gin.Context)  {
 	var param UserLogin
-	if err := c.Bind(&param); err != nil {
+	if err := c.ShouldBind(&param); err != nil {
 		ApiResponse(c, &Response{Code: -1, Msg: err.Error()})
 		return
 	}
