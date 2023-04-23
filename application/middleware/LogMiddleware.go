@@ -13,6 +13,7 @@ func LoggerToFile() gin.HandlerFunc {
 		startTime := time.Now()
 
 		c.Header("Access-Control-Allow-Headers", "*")
+		c.Header("Access-Control-Allow-Origin", "*")
 		// 处理请求
 		c.Next()
 
