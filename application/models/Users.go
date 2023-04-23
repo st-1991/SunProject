@@ -9,16 +9,11 @@ import (
 
 type User struct {
 	Id int `json:"id" gorm:"primaryKey"`
-	Phone string `json:"phone" gorm:"index:id_phone;type:char(11);not null;default:'';comment:手机号"`
+	Account string `json:"account" gorm:"index:id_account;type:varchar(64);not null;default:'';comment:账号"`
 	Nickname string `json:"nickname" gorm:"type:varchar(32);not null;default:'';comment:用户昵称"`
-	Sex string `json:"sex" gorm:"type:enum(0,1);not null;comment:性别：0女1男"`
 	Avatar string `json:"avatar" gorm:"type:varchar(256);not null;default:'';comment:头像"`
-	Birthday string `json:"birthday"  gorm:"type:char(10);not null;default:'';comment:生日"`
-	Profile string `json:"profile" gorm:"type:varchar(512);not null;default:'';comment:个人简介"`
-	ThumbUp int `json:"thumb_up" gorm:"type:int(0);not null;default:0;comment:点赞数"`
-	Fans int `json:"fans" gorm:"type:int(0);not null;default: 0;comment:粉丝数"`
-	Focus int `json:"focus" gorm:"type:int(0);not null;default: 0;comment:关注数"`
-	Balance float64 `json:"balance" gorm:"type:decimal(11, 2);not null;default:0.00;comment:余额"`
+	Status int8 `json:"status" gorm:"type:tinyint(1);not null;default:0;comment:用户状态 1会员0普通-1禁用"`
+
 	Ip string `json:"ip" gorm:"type:varchar(32);not null;default:'';comment:登录ip"`
 	Date `gorm:"embedded"`
 }

@@ -2,18 +2,23 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
 	"regexp"
+	"strings"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
+	"gopkg.in/gomail.v2"
 
 	"SunProject/application/models"
 	"SunProject/application/service"
 	"SunProject/config"
+	"SunProject/libary/email"
 )
 
 type UserLogin struct {
-	Phone string `form:"phone" binding:"required"`
+	Account string `form:"account" binding:"required"`
 	Code string `form:"code" binding:"required"`
 }
 
@@ -23,21 +28,41 @@ type LoginResult struct {
 }
 
 func SendSms(c *gin.Context) {
-	phone := c.Query("phone")
+	account := c.PostForm("account")
+	if account == "" {
+		ApiError(c, &Response{Code: -1, Msg: "请输入用户账号~"})
+		return
+	}
 
-	rex := regexp.MustCompile(`^(1[3-9][0-9]{9})$`)
-	if res := rex.MatchString(phone); !res {
-		ApiError(c, &Response{-1, "手机号不正确！", nil})
+	rex := regexp.MustCompile(`^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$`)
+	if res := rex.MatchString(account); !res {
+		ApiError(c, &Response{-1, "请使用邮箱登录！", nil})
 		return
 	}
 	code := config.CreateCode()
 
-	//if ok := libary.SendSms(phone, code); !ok {
-	//	ApiResponse(c, &Response{Code: -1, Msg: "短信发送失败"})
-	//	return
-	//}
+	gm := gomail.NewMessage()
+	d := email.InitMail()
+	m := email.Message{
+		To:        account,
+		GoMessage: gm,
+	}
+	m.Title("openAI验证码")
 
-	redisKey := config.RedisKey("sms:" + phone)
+	fileC, err := os.ReadFile(config.ProjectPath + "/libary/email/temp/code.html")
+	if err != nil {
+		config.Logger().Error(fmt.Sprintf("文件打开失败：%s", err))
+		ApiError(c, &Response{Code: -1, Msg: "发送失败-open file error"})
+		return
+	}
+	content := strings.Replace(string(fileC), "[code]", code, -1)
+	m.Content(content)
+	if err := email.Send(d, m); err != nil {
+		ApiError(c, &Response{Code: -1, Msg: "发送失败"})
+		return
+	}
+
+	redisKey := config.RedisKey("sms:" + account)
 	redisKey.PrefixKey().Set(code).Expire(300)
 	ApiResponse(c, &Response{Msg: "发送成功，请注意查收！"})
 }
@@ -49,13 +74,13 @@ func Login(c *gin.Context)  {
 		return
 	}
 
-	rex := regexp.MustCompile(`^(1[3-9][0-9]{9})$`)
-	if res := rex.MatchString(param.Phone); !res {
-		ApiResponse(c, &Response{-1, "手机号不正确！", new([]string)})
-		return
-	}
+	//rex := regexp.MustCompile(`^(1[3-9][0-9]{9})$`)
+	//if res := rex.MatchString(param.Account); !res {
+	//	ApiResponse(c, &Response{-1, "手机号不正确！", new([]string)})
+	//	return
+	//}
 
-	redisKey := config.RedisKey("sms:" + param.Phone)
+	redisKey := config.RedisKey("sms:" + param.Account)
 	code, err := redis.String(redisKey.PrefixKey().Get())
 	if err != nil {
 		ApiResponse(c, &Response{Code: -1, Msg: "请发送验证码！"})
@@ -66,10 +91,10 @@ func Login(c *gin.Context)  {
 		return
 	}
 
-	User := models.User{Phone: param.Phone}
-	userDetails, ok := models.GetUser(param.Phone, 0)
+	User := models.User{Account: param.Account}
+	userDetails, ok := models.GetUser(param.Account, 0)
 	if !ok {
-		User = models.User{Phone: param.Phone, Nickname: models.CreateNickname(), Avatar: models.CreateAvatar(), Sex: "1", Ip: c.ClientIP()}
+		User = models.User{Account: param.Account, Nickname: models.CreateNickname(), Avatar: models.CreateAvatar(), Ip: c.ClientIP()}
 		ok := User.CreateUser()
 		if !ok {
 			ApiResponse(c, &Response{Code: -1, Msg: "登陆失败，请重试！"})
@@ -83,7 +108,7 @@ func Login(c *gin.Context)  {
 		}(userDetails.Id, c.ClientIP())
 	}
 
-	userData := service.UserData{ID: userDetails.Id, Phone: userDetails.Phone}
+	userData := service.UserData{ID: userDetails.Id, Account: userDetails.Account}
 	userJson, _ := json.Marshal(&userData)
 	j := service.Jwt{}
 	token, err := j.CreateToken("user", string(userJson), 3600 * 24 * 7)

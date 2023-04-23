@@ -14,9 +14,9 @@ type Route struct {
 func (r *Route) Run() {
 	api := r.Engine.Group("/api")
 	{
-		api.GET("/send_sms", controllers.SendSms)
+		api.POST("/send_sms", controllers.SendSms)
 		api.POST("/login", controllers.Login)
-		api.GET("/tabs", controllers.Tabs)
+		//api.GET("/tabs", controllers.Tabs)
 	}
 
 	apiNeedToken := r.Engine.Group("/api").Use(middleware.KeepLogin())
@@ -24,13 +24,5 @@ func (r *Route) Run() {
 		apiNeedToken.GET("/user/info", controllers.UserInfo)
 		apiNeedToken.POST("/user/edit", controllers.EditUser)
 		apiNeedToken.GET("/users", controllers.UserList)
-		apiNeedToken.POST("/upload_file", controllers.UploadFile)
-
-		apiNeedToken.POST("/dynamic/add", controllers.AddDynamic) // 发布动态
-		apiNeedToken.GET("/dynamic/recommend", controllers.RecommendDynamics) // 推荐动态
-		apiNeedToken.GET("/dynamic/thumb/:dId", controllers.DynamicThumbUp) // 点赞动态
-
-		apiNeedToken.POST("/comment/add", controllers.AddComment) // 发布评论
-		apiNeedToken.GET("/comment/list", controllers.Comments) // 评论列表
 	}
 }
