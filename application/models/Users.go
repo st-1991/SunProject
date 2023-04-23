@@ -53,11 +53,11 @@ func (u *User) EditUser() bool {
 }
 
 // GetUser 获取用户详情
-func GetUser(phone string, id int) (User, bool) {
+func GetUser(account string, id int) (User, bool) {
 	var user User
 	query := config.DB.Table(user.TableName())
-	if phone != "" {
-		query.Where("phone = ?", phone)
+	if account != "" {
+		query.Where("account = ?", account)
 	}
 	if id != 0 {
 		query.Where("id = ?", id)
