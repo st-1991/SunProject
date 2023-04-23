@@ -9,7 +9,7 @@ import (
 
 func KeepLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token := c.GetHeader("keep-token")
+		token := c.GetHeader("Keep-Token")
 		isLogin := false
 		if token != "" {
 			token := service.Token(token)

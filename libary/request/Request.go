@@ -70,7 +70,7 @@ func JsonPost(url string, params []byte, headers map[string]string) Result {
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
-	client := &http.Client{Timeout: 5 * time.Second}
+	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
 		config.Logger().Error(fmt.Sprintf("发送请求失败：%s", err))
