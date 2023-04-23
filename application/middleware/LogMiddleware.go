@@ -3,6 +3,7 @@ package middleware
 import (
 	"SunProject/config"
 	"github.com/gin-gonic/gin"
+	"net/http"
 	"time"
 )
 
@@ -19,6 +20,10 @@ func LoggerToFile() gin.HandlerFunc {
 		c.Header("Access-Control-Allow-Methods", "GET,POST,OPTIONS,PUT,DELETED,PATCH")
 		c.Header("Access-Control-Allow-Credentials", "true")
 		c.Header("Access-Control-Max-Age", "3600")
+		if c.Request.Method == "OPTIONS" {
+			c.JSON(http.StatusOK, "")
+			c.Abort()
+		}
 		// 处理请求
 		c.Next()
 
