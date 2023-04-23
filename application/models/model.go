@@ -16,6 +16,7 @@ func Tables() []interface{} {
 		&User{},
 		&Files{},
 		&Keys{},
+		&Messages{},
 	}
 }
 

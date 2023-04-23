@@ -13,11 +13,11 @@ func (Keys) TableName() string {
 	return "keep_keys"
 }
 
-func getKey(k Keys) string {
-	var res map[string]string
-	result := config.DB.Table(k.TableName()).Select([]string{"key"}).Where("status = ?", 1).First(&res)
-	if result.Error != nil {
+func GetKey() string {
+	var k Keys
+	config.DB.Table(k.TableName()).Where("status = ?", 1).Take(&k)
+	if k.Id == 0 {
 		return ""
 	}
-	return res["key"]
+	return k.Key
 }

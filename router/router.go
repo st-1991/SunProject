@@ -14,7 +14,7 @@ type Route struct {
 func (r *Route) Run() {
 	api := r.Engine.Group("/api")
 	{
-		api.POST("/send_sms", controllers.SendSms)
+		api.GET("/send_sms", controllers.SendSms)
 		api.POST("/login", controllers.Login)
 		//api.GET("/tabs", controllers.Tabs)
 	}
@@ -24,5 +24,8 @@ func (r *Route) Run() {
 		apiNeedToken.GET("/user/info", controllers.UserInfo)
 		apiNeedToken.POST("/user/edit", controllers.EditUser)
 		apiNeedToken.GET("/users", controllers.UserList)
+
+		apiNeedToken.POST("/completions", controllers.Completions)
+
 	}
 }

@@ -28,7 +28,7 @@ type LoginResult struct {
 }
 
 func SendSms(c *gin.Context) {
-	account := c.PostForm("account")
+	account := c.Query("account")
 	if account == "" {
 		ApiError(c, &Response{Code: -1, Msg: "请输入用户账号~"})
 		return

@@ -11,7 +11,14 @@ func LoggerToFile() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 开始时间
 		startTime := time.Now()
+		//             $response->header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS,PUT,DELETED,PATCH');
+		//            $response->header('Access-Control-Allow-Credentials', true);
 
+		c.Header("Access-Control-Allow-Headers", "*")
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Methods", "GET,POST,OPTIONS,PUT,DELETED,PATCH")
+		c.Header("Access-Control-Allow-Credentials", "true")
+		c.Header("Access-Control-Max-Age", "3600")
 		// 处理请求
 		c.Next()
 
