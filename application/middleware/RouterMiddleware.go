@@ -26,7 +26,6 @@ func KeepLogin() gin.HandlerFunc {
 			}
 		}
 		c.Set("isLogin", isLogin)
-		c.Header("Access-Control-Allow-Headers", "*")
 		c.Next()
 	}
 }

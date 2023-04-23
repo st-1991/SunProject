@@ -12,6 +12,7 @@ func LoggerToFile() gin.HandlerFunc {
 		// 开始时间
 		startTime := time.Now()
 
+		c.Header("Access-Control-Allow-Headers", "*")
 		// 处理请求
 		c.Next()
 
