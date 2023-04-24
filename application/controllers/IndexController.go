@@ -48,7 +48,6 @@ func SendSms(c *gin.Context) {
 		GoMessage: gm,
 	}
 	m.Title("openAI验证码")
-
 	fileC, err := os.ReadFile(config.ProjectPath + "/libary/email/temp/code.html")
 	if err != nil {
 		config.Logger().Error(fmt.Sprintf("文件打开失败：%s", err))
