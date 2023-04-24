@@ -138,7 +138,7 @@ func ParseEventStreamFields(p []byte, parentMessageId, Role string) Completion {
 func (c CompletionRaw) SaveCompletionRaw() {
 	redisKey := config.RedisKey("CompletionRaw:" + c.Id)
 	cStr, _ := json.Marshal(c)
-	if _, err := config.Redis.Do("lpush", redisKey, cStr); err != nil {
+	if _, err := config.Redo("lpush", redisKey, cStr); err != nil {
 		config.Logger().Error("原始信息保存失败" + err.Error())
 	}
 }
@@ -148,7 +148,7 @@ func MessageComplete(MessageNo, CompletionId string) {
 	var role string
 	redisKey := config.RedisKey("CompletionRaw:" + CompletionId)
 	for {
-		m, err := redis.String(config.Redis.Do("rpop", redisKey))
+		m, err := redis.String(config.Redo("rpop", redisKey))
 		if err != nil {
 			config.Logger().Error(err.Error())
 			break
