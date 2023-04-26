@@ -110,7 +110,6 @@ type Completion struct {
 func ParseEventStreamFields(p []byte, parentMessageId, Role string) Completion {
 	var compRaw CompletionRaw
 	_ = json.Unmarshal(p, &compRaw)
-	compRaw.SaveCompletionRaw()
 	comp := Completion{
 		Id: compRaw.Id,
 	}
@@ -122,7 +121,6 @@ func ParseEventStreamFields(p []byte, parentMessageId, Role string) Completion {
 		comp.ParentMessageId = parentMessageId
 		if compRaw.Choices[0].FinishReason == "stop" {
 			comp.Segment = "stop"
-			MessageComplete(parentMessageId, comp.Id)
 			return comp
 		}
 	}
@@ -135,12 +133,32 @@ func ParseEventStreamFields(p []byte, parentMessageId, Role string) Completion {
 	return comp
 }
 
-func (c CompletionRaw) SaveCompletionRaw() {
-	redisKey := config.RedisKey("CompletionRaw:" + c.Id)
-	cStr, _ := json.Marshal(c)
-	if _, err := config.Redo("lpush", redisKey, cStr); err != nil {
-		config.Logger().Error("原始信息保存失败" + err.Error())
+func SaveCompletionRaw(chanComp chan Completion, messageNo string) {
+	//redisKey := config.RedisKey("CompletionRaw:" + c.Id)
+	//cStr, _ := json.Marshal(c)
+	//if _, err := config.Redo("lpush", redisKey, cStr); err != nil {
+	//	config.Logger().Error("原始信息保存失败" + err.Error())
+	//}
+	var (
+		role string
+		content string
+	)
+
+	for c := range chanComp{
+		if c.Segment == "stop" {
+			continue
+		}
+		if role == "" {
+			role = c.Role
+		}
+		content += c.Text
 	}
+	mDB := models.Messages{
+		MessageNo: messageNo,
+		Role: role,
+		Content: content,
+	}
+	mDB.CreateMessage()
 }
 
 func MessageComplete(MessageNo, CompletionId string) {
@@ -173,7 +191,6 @@ func MessageComplete(MessageNo, CompletionId string) {
 }
 
 func UserMessageComplete(MessageNo, message string)  {
-	time.Sleep(1 * time.Second)
 	mDB := models.Messages{
 		MessageNo: MessageNo,
 		Role: "user",
