@@ -112,7 +112,7 @@ func Login(c *gin.Context)  {
 	userData := service.UserData{ID: userDetails.Id, Account: userDetails.Account}
 	userJson, _ := json.Marshal(&userData)
 	j := service.Jwt{}
-	token, err := j.CreateToken("user", string(userJson), 3600 * 24 * 7)
+	token, err := j.CreateToken("user", string(userJson), 3600 * 24 * 30)
 	if err != nil {
 		config.Logger().Error("生成token失败！" + err.Error())
 		ApiResponse(c, &Response{Code: -1, Msg: "系统错误！"})
