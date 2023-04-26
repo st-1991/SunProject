@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"bytes"
 	"crypto/hmac"
 	"crypto/md5"
 	"crypto/sha256"
@@ -8,6 +9,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -15,7 +18,7 @@ import (
 func VerifySign() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		//computeSignature(c)
-		//log.Println(computeSignature(c))
+		log.Println(computeSignature(c))
 		c.Next()
 	}
 }
@@ -37,7 +40,21 @@ func computeSignature(c *gin.Context) string {
 		c.Abort()
 	}
 
+	//var buf bytes.Buffer
+	//tee := io.TeeReader(c.Request.Body, &buf)
+	//data, err := ioutil.ReadAll(tee)
+	//if err != nil {
+	//	c.JSON(http.StatusUnauthorized, gin.H{
+	//		"status": -999,
+	//		"message": "参数读取失败",
+	//		"data": nil,
+	//	})
+	//	c.Abort()
+	//}
 	data, _ := c.GetRawData()
+	// 重新写入body
+	c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(data))
+
 	var md5Str string
 	if c.Request.ContentLength > 0 {
 		randomStr := strconv.FormatInt(c.Request.ContentLength, 10) // 数字转字符串
