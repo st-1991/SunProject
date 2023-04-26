@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -40,18 +41,17 @@ func computeSignature(c *gin.Context) string {
 		c.Abort()
 	}
 
-	//var buf bytes.Buffer
-	//tee := io.TeeReader(c.Request.Body, &buf)
-	//data, err := ioutil.ReadAll(tee)
-	//if err != nil {
-	//	c.JSON(http.StatusUnauthorized, gin.H{
-	//		"status": -999,
-	//		"message": "参数读取失败",
-	//		"data": nil,
-	//	})
-	//	c.Abort()
-	//}
-	data, _ := c.GetRawData()
+	var buf bytes.Buffer
+	tee := io.TeeReader(c.Request.Body, &buf)
+	data, err := ioutil.ReadAll(tee)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"status": -999,
+			"message": "参数读取失败",
+			"data": nil,
+		})
+		c.Abort()
+	}
 	// 重新写入body
 	c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(data))
 
