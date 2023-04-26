@@ -8,12 +8,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"io"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
-	"time"
 )
 
 type Prompt struct {
@@ -58,7 +57,9 @@ func Completions(c *gin.Context) {
 	// 设置为流
 	c.Header("Content-Type", "text/event-stream")
 	if p.ParentMessageId == "" {
-		p.ParentMessageId = strconv.FormatInt(time.Now().Unix(), 10)
+		id := uuid.New()
+		//p.ParentMessageId = strconv.FormatInt(time.Now().Unix(), 10)
+		p.ParentMessageId = id.String()
 	}
 	go service.UserMessageComplete(p.ParentMessageId, p.Prompt)
 

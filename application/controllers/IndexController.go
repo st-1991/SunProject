@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin/binding"
 	"os"
 	"regexp"
 	"strings"
@@ -68,10 +69,11 @@ func SendSms(c *gin.Context) {
 
 func Login(c *gin.Context)  {
 	var param UserLogin
-	if err := c.Bind(&param); err != nil {
+	if err := c.ShouldBindBodyWith(&param, binding.JSON); err != nil {
 		ApiResponse(c, &Response{Code: -1, Msg: err.Error()})
 		return
 	}
+	config.Logger().Info(param)
 
 	//rex := regexp.MustCompile(`^(1[3-9][0-9]{9})$`)
 	//if res := rex.MatchString(param.Account); !res {
