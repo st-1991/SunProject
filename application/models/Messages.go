@@ -26,8 +26,8 @@ type Message struct {
 	//Name string `json:"name"`
 }
 
-func (m *Messages) GetMessageByNo(messageNo string) []Message {
+func (m *Messages) GetMessageByNo(messageNo string, pageSize int) []Message {
 	var result []Message
-	config.DB.Model(m).Select("role", "content").Where("message_no = ?", messageNo).Find(&result)
+	config.DB.Model(m).Select("role", "content").Where("message_no = ?", messageNo).Limit(pageSize).Find(&result)
 	return result
 }
