@@ -1,20 +1,20 @@
 debug:
   datatype: mysql
-  hostname: 112.126.61.95
-  database: keep_happy
-  username: keep
-  password: openai
+  hostname: 49.232.172.176
+  database: keep
+  username: root
+  password: keep123
 
 test:
   datatype: mysql
-  hostname: 112.126.61.95
-  database: keep_happy
-  username: keep
-  password: openai
+  hostname: 49.232.172.176
+  database: keep
+  username: root
+  password: keep123
 
 release:
   datatype: mysql
-  hostname: 112.126.61.95
-  database: keep_happy
-  username: keep
-  password: openai
+  hostname: 49.232.172.176
+  database: keep
+  username: root
+  password: keep123
