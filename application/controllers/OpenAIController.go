@@ -85,7 +85,7 @@ func Completions(c *gin.Context) {
 			continue
 		}
 		config.Logger().Info("接收参数 ：" + line)
-		if line == "[DONE]" {
+		if line == "[DONE]\n" {
 			break
 		}
  		completion := service.ParseEventStreamFields([]byte(line), p.ParentMessageId, role)
@@ -99,4 +99,36 @@ func Completions(c *gin.Context) {
 	}
 	// 关闭信道
 	close(chanComp)
+}
+
+func CreateImages(c *gin.Context) {
+	if !IsLogin(c) {
+		return
+	}
+	var i service.ImageParams
+	if err := c.Bind(&i); err != nil {
+		ApiError(c, &Response{Code: -1, Msg: "参数绑定错误"})
+		return
+	}
+	if i.Prompt == "" {
+		ApiError(c, &Response{Code: -1, Msg: "请输入绘画修饰词"})
+		return
+	}
+	if i.N < 1 || i.N > 10 {
+		ApiError(c, &Response{Code: -1, Msg: "图片数量为 1～10张"})
+		return
+	}
+	resp, err := service.ImagesGenerations(i)
+	if err != nil {
+		ApiError(c, &Response{Code:-1, Msg: err.Error()})
+		return
+	}
+	respStruct := struct {
+		Created int `json:"created"`
+		Data []struct{
+			Url string `json:"url"`
+		} `json:"data"`
+	}{}
+	_ = json.Unmarshal(resp, &respStruct)
+	ApiResponse(c, &Response{Data: respStruct.Data})
 }

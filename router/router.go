@@ -26,6 +26,6 @@ func (r *Route) Run() {
 		apiNeedToken.GET("/users", controllers.UserList)
 
 		apiNeedToken.POST("/completions", controllers.Completions)
-
+		apiNeedToken.POST("/images/generations", controllers.CreateImages)
 	}
 }
