@@ -14,10 +14,15 @@ type Route struct {
 func (r *Route) Run() {
 
 	api := r.Engine.Group("/api")
+	api.GET("/keep/notify", controllers.Notify)
+	api.POST("/keep/notify", controllers.Notify)
+
 	//api.Use(middleware.VerifySign()) //签名验证
 
 	api.GET("/send_sms", controllers.SendSms)
 	api.POST("/login", controllers.Login)
+	api.GET("/product", controllers.Products)
+
 	//api.GET("/tabs", controllers.Tabs)
 	apiNeedToken := api.Group("").Use(middleware.KeepLogin())
 	{
@@ -27,5 +32,9 @@ func (r *Route) Run() {
 
 		apiNeedToken.POST("/completions", controllers.Completions)
 		apiNeedToken.POST("/images/generations", controllers.CreateImages)
+
+		apiNeedToken.POST("/prepay", controllers.PrePay)
+
+		apiNeedToken.GET("/integral_logs", controllers.GetIntegralLogs)
 	}
 }

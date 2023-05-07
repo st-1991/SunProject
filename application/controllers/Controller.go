@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strings"
 )
 
 type Response struct {
@@ -30,4 +31,17 @@ func ApiError(c *gin.Context, response *Response, status ...int)  {
 		httpStatus = status[0]
 	}
 	c.JSON(httpStatus, response)
+}
+
+func GetReaIp(c *gin.Context) string {
+	realClientIp := c.GetHeader("X-Forwarded-For")
+	if realClientIp != "" {
+		ips := strings.Split(realClientIp, ", ")
+		if len(ips) > 1 {
+			realClientIp = ips[0]
+		}
+	} else {
+		realClientIp = c.ClientIP()
+	}
+	return realClientIp
 }

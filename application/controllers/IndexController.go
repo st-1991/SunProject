@@ -3,13 +3,13 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin/binding"
 	"os"
 	"regexp"
 	"strings"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"gopkg.in/gomail.v2"
 
 	"SunProject/application/models"
@@ -95,7 +95,7 @@ func Login(c *gin.Context)  {
 	User := models.User{Account: param.Account}
 	userDetails, ok := models.GetUser(param.Account, 0)
 	if !ok {
-		User = models.User{Account: param.Account, Nickname: models.CreateNickname(), Avatar: models.CreateAvatar(), Ip: c.ClientIP()}
+		User = models.User{Account: param.Account, Nickname: models.CreateNickname(), Avatar: models.CreateAvatar(), Ip: GetReaIp(c)}
 		ok := User.CreateUser()
 		if !ok {
 			ApiResponse(c, &Response{Code: -1, Msg: "登陆失败，请重试！"})

@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -60,6 +62,8 @@ func FromDataPost(url string, params map[string][]byte, files []FileParam, heade
 }
 
 func JsonPost(url string, params []byte, headers map[string]string) Result {
+	config.Logger().Info(fmt.Sprintf("请求参数：%s", string(params)))
+
 	reader := bytes.NewReader(params)
 	req, err := http.NewRequest(http.MethodPost, url, reader)
 	if err != nil {
@@ -82,13 +86,18 @@ func JsonPost(url string, params []byte, headers map[string]string) Result {
 
 
 // www-from-urlencoded
-func FromUrlencodedPost() {
-	// TODO: 待实现
-	//resp, err := http.PostForm(SmsHost, url.Values{
-	//	"phone": {phone},
-	//	"templateId": {templateId},
-	//	"data": {string(smsData)},
-	//})
+func FromUrlencodedPost(host string, params map[string]interface{}) Result {
+	form := url.Values{}
+	for k, v := range params {
+		switch v.(type) {
+		case string:
+			form.Add(k, v.(string))
+		case int:
+			form.Add(k, strconv.Itoa(v.(int)))
+		}
+	}
+	resp, err := http.PostForm(host, form)
+	return Result{resp, err}
 }
 
 func (r Result) StatusCode() int {

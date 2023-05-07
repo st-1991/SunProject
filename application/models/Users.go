@@ -3,7 +3,6 @@ package models
 import (
 	"SunProject/config"
 	"fmt"
-	"gorm.io/gorm"
 )
 
 
@@ -12,8 +11,8 @@ type User struct {
 	Account string `json:"account" gorm:"index:id_account;type:varchar(64);not null;default:'';comment:账号"`
 	Nickname string `json:"nickname" gorm:"type:varchar(32);not null;default:'';comment:用户昵称"`
 	Avatar string `json:"avatar" gorm:"type:varchar(256);not null;default:'';comment:头像"`
+	Integral int `json:"integral" gorm:"type:int(11);unsigned;not null;default:0;comment:积分"`
 	Status int8 `json:"status" gorm:"type:tinyint(1);not null;default:0;comment:用户状态 1会员0普通-1禁用"`
-
 	Ip string `json:"ip" gorm:"type:varchar(32);not null;default:'';comment:登录ip"`
 	Date `gorm:"embedded"`
 }
@@ -87,13 +86,5 @@ func CreateNickname() string {
 }
 
 func CreateAvatar() string {
-	return "http://www.gravatar.com/avatar/"
-}
-
-// SetThumbUp 点赞
-func (u User) SetThumbUp(DB *gorm.DB) bool {
-	if u.Id == 0 {
-		return false
-	}
-	return DB.Model(&u).Where("id = ?", u.Id).Update("thumb_up", gorm.Expr("thumb_up + ?", 1)).Error == nil
+	return "https://www.imageoss.com/images/2023/05/06/1682426702646avatarf3db669b024fad66-1930929abe284709319f50318c197b0f4.png"
 }
