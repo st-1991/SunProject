@@ -14,7 +14,7 @@ type Route struct {
 func (r *Route) Run() {
 
 	api := r.Engine.Group("/api")
-	api.Use(middleware.VerifySign()) //签名验证
+	//api.Use(middleware.VerifySign()) //签名验证
 
 	api.GET("/send_sms", controllers.SendSms)
 	api.POST("/login", controllers.Login)
@@ -26,6 +26,6 @@ func (r *Route) Run() {
 		apiNeedToken.GET("/users", controllers.UserList)
 
 		apiNeedToken.POST("/completions", controllers.Completions)
-
+		apiNeedToken.POST("/images/generations", controllers.CreateImages)
 	}
 }

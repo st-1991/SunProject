@@ -6,7 +6,6 @@ import (
 	"SunProject/libary/request"
 	"encoding/json"
 	"fmt"
-	"github.com/garyburd/redigo/redis"
 	"net/http"
 	"time"
 )
@@ -158,34 +157,8 @@ func SaveCompletionRaw(chanComp chan Completion, messageNo string) {
 		Role: role,
 		Content: content,
 	}
-	mDB.CreateMessage()
-}
-
-func MessageComplete(MessageNo, CompletionId string) {
-	var Content string
-	var role string
-	redisKey := config.RedisKey("CompletionRaw:" + CompletionId)
-	for {
-		m, err := redis.String(config.Redo("rpop", redisKey))
-		if err != nil {
-			config.Logger().Error(err.Error())
-			break
-		}
-		var completionRaw CompletionRaw
-		_ = json.Unmarshal([]byte(m), &completionRaw)
-		config.Logger().Info("数据",completionRaw)
-		if role == "" && completionRaw.Choices[0].Delta.Role != "" {
-			role = completionRaw.Choices[0].Delta.Role
-		}
-		if completionRaw.Choices[0].Delta.Content != "" {
-			Content += completionRaw.Choices[0].Delta.Content
-		}
-	}
-
-	mDB := models.Messages{
-		MessageNo: MessageNo,
-		Role: role,
-		Content: Content,
+	if mDB.Content == "" {
+		return
 	}
 	mDB.CreateMessage()
 }
@@ -199,6 +172,37 @@ func UserMessageComplete(MessageNo, message string)  {
 	mDB.CreateMessage()
 }
 
-func send()  {
+type ImageParams struct {
+	Prompt string `json:"prompt" form:"prompt"`
+	N int `json:"n" form:"n"`
+	Size string `json:"size" form:"size"`
+	ResponseFormat string `json:"response_format" form:"response_format"`
+}
 
+func ImagesGenerations(iParams ImageParams) ([]byte, error) {
+	apiKey := models.GetKey()
+	if apiKey == "" {
+		return nil, fmt.Errorf("未获取的可用key")
+	}
+	openAi := NewOpenAI(apiKey, "images/generations")
+	headers := map[string]string{
+		"Api-Key":openAi.ApiKey,
+	}
+	config.Logger().Info("header", headers)
+	params, _ := json.Marshal(iParams)
+	res := request.JsonPost(openAi.Host + openAi.Router, params, headers)
+	if res.Err != nil {
+		return nil, res.Err
+	}
+	if res.StatusCode() != http.StatusOK {
+		body, _ := res.Body()
+		errBody := struct {
+			Status int `json:"status"`
+			Msg string `json:"msg"`
+		}{}
+		_ = json.Unmarshal(body, &errBody)
+		config.Logger().Error(fmt.Sprintf("发送请求失败：%+v", errBody))
+		return nil, fmt.Errorf(errBody.Msg)
+	}
+	return res.Body()
 }
