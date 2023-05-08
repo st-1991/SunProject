@@ -17,7 +17,7 @@ func (r *Route) Run() {
 	api.GET("/keep/notify", controllers.Notify)
 	api.POST("/keep/notify", controllers.Notify)
 
-	//api.Use(middleware.VerifySign()) //签名验证
+	api.Use(middleware.VerifySign()) //签名验证
 
 	api.GET("/send_sms", controllers.SendSms)
 	api.POST("/login", controllers.Login)
