@@ -5,9 +5,10 @@ import (
 	"SunProject/application/service"
 	"SunProject/config"
 	pay2 "SunProject/libary/pay"
-	"fmt"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"math"
+	"net/http"
 	"strconv"
 )
 
@@ -62,7 +63,8 @@ func PrePay(c *gin.Context) {
 		Type: order.PayType,
 		Name: order.Title,
 		OutTradeNo: order.OrderSn,
-		Money: fmt.Sprintf("%.2f", order.OrderAmount),
+		//Money: fmt.Sprintf("%.2f", order.OrderAmount),
+		Money: "0.01",
 		ClientIp: GetReaIp(c),
 		Device: "pc",
 	}
@@ -82,7 +84,46 @@ func Notify(c *gin.Context) {
 			queryData[key] = values[0]
 		}
 	}
-	_ = service.Notify(queryData["out_trade_no"], queryData["trade_no"])
-	ApiResponse(c, &Response{Data: queryData})
+	params := c.Request.PostForm
+	jsonParams, _ := json.Marshal(params)
+	jsonQuery, _ := json.Marshal(queryData)
+
+	config.Logger().Debugf("请求方式 %s", c.Request.Method)
+	config.Logger().Debugf("post请求参数 %s", string(jsonParams))
+	config.Logger().Debugf("get请求参数 %s", string(jsonQuery))
+
+	if pid, ok := queryData["pid"]; ok {
+		if pid != "1063" {
+			c.String(http.StatusBadRequest, "fail")
+		}
+	}
+	// 处理
+	res := service.Notify(queryData["out_trade_no"], queryData["trade_no"])
+	if !res {
+		c.String(http.StatusBadRequest, "fail")
+		return
+	}
+	c.String(http.StatusOK, "success")
 	return
+}
+
+func OrderStatus(c *gin.Context)  {
+	orderSn := c.Query("order_sn")
+	if orderSn == "" {
+		ApiError(c, &Response{Msg: "参数错误"})
+		return
+	}
+	orderDetail := struct {
+		Title string `json:"title"`
+		PayType string `json:"pay_type"`
+		OrderSn string `json:"order_sn"`
+		OrderAmount string `json:"order_amount"`
+		Status int `json:"status"`
+	}{}
+	result := config.DB.Model(&models.Order{}).Where("order_sn = ?", orderSn).First(&orderDetail)
+	if result.Error != nil {
+		ApiError(c, &Response{Msg: "订单不存在"})
+		return
+	}
+	ApiResponse(c, &Response{Data: orderDetail})
 }

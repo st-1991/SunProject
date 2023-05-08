@@ -35,7 +35,7 @@ type ApiParam struct {
 }
 
 func (p ApiParam) CreateOrder() (map[string]string, error) {
-	notifyUrl := "https://api.aizj.top/api/pay/notify"
+	notifyUrl := "https://api.aizj.top/api/keep/notify"
 	params := map[string]interface{}{
 		"pid": 1063,
 		"type": p.Type,

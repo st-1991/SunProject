@@ -34,6 +34,7 @@ func (r *Route) Run() {
 		apiNeedToken.POST("/images/generations", controllers.CreateImages)
 
 		apiNeedToken.POST("/prepay", controllers.PrePay)
+		apiNeedToken.GET("/order/status", controllers.OrderStatus)
 
 		apiNeedToken.GET("/integral_logs", controllers.GetIntegralLogs)
 	}
