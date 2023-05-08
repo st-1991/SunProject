@@ -41,6 +41,7 @@ func (p ApiParam) CreateOrder() (map[string]string, error) {
 		"type": p.Type,
 		"out_trade_no": p.OutTradeNo,
 		"notify_url": notifyUrl,
+		"return_url": "https://www.aizj.top/result",
 		"name": p.Name,
 		"money": p.Money,
 		"clientip": p.ClientIp,
