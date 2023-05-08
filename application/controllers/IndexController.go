@@ -3,11 +3,11 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/garyburd/redigo/redis"
 	"os"
 	"regexp"
 	"strings"
 
-	"github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"gopkg.in/gomail.v2"

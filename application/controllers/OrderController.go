@@ -5,7 +5,6 @@ import (
 	"SunProject/application/service"
 	"SunProject/config"
 	pay2 "SunProject/libary/pay"
-	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"math"
 	"net/http"
@@ -64,7 +63,7 @@ func PrePay(c *gin.Context) {
 		Name: order.Title,
 		OutTradeNo: order.OrderSn,
 		//Money: fmt.Sprintf("%.2f", order.OrderAmount),
-		Money: "0.01",
+		Money: "0.10",
 		ClientIp: GetReaIp(c),
 		Device: "pc",
 	}
@@ -84,17 +83,17 @@ func Notify(c *gin.Context) {
 			queryData[key] = values[0]
 		}
 	}
-	params := c.Request.PostForm
-	jsonParams, _ := json.Marshal(params)
-	jsonQuery, _ := json.Marshal(queryData)
-
-	config.Logger().Debugf("请求方式 %s", c.Request.Method)
-	config.Logger().Debugf("post请求参数 %s", string(jsonParams))
-	config.Logger().Debugf("get请求参数 %s", string(jsonQuery))
-
+	// TODO: md5加密验证
 	if pid, ok := queryData["pid"]; ok {
 		if pid != "1063" {
 			c.String(http.StatusBadRequest, "fail")
+			return
+		}
+	}
+	if status, ok := queryData["trade_status"]; ok {
+		if status != "TRADE_SUCCESS" {
+			c.String(http.StatusBadRequest, "fail")
+			return
 		}
 	}
 	// 处理
