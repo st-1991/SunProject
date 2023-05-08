@@ -57,7 +57,7 @@ func SendSms(c *gin.Context) {
 		return
 	}
 	content := strings.Replace(string(fileC), "[code]", code, -1)
-	content = strings.Replace(string(fileC), "[date]", time.Now().Format("2006-01-02 15:04:05"), -1)
+	content = strings.Replace(content, "[date]", time.Now().Format("2006-01-02 15:04:05"), -1)
 	m.Content(content)
 	if err := email.Send(d, m); err != nil {
 		ApiError(c, &Response{Code: -1, Msg: "发送失败"})

@@ -95,7 +95,7 @@ func ChangeIntegral(db *gorm.DB, userId, integral, changeType int, title string)
 			Title: title,
 			Integral: integral,
 			UserId: userId,
-			Type: 1,
+			Type: changeType,
 		})
 		if result.Error != nil {
 			config.Logger().Error(fmt.Sprintf("创建用户使用记录失败: %s", result.Error))
