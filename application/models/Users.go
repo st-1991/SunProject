@@ -68,6 +68,14 @@ func GetUser(account string, id int) (User, bool) {
 	return user, true
 }
 
+func GetUserIntegral(userId int) int {
+	var user struct{
+		Integral int `json:"integral"`
+	}
+	config.DB.Model(&User{}).Where("id = ?", userId).First(&user)
+	return user.Integral
+}
+
 type UserBase struct {
 	Id int `json:"id"`
 	Avatar string `json:"avatar"`

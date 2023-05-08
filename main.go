@@ -41,6 +41,6 @@ func main() {
 	route.Run()
 	err := engine.Run(":7878")
 	if err != nil {
-		panic("服务启动失败")
+		panic("服务启动失败：" + err.Error())
 	}
 }

@@ -68,30 +68,38 @@ func Notify(orderSn, outTradeNo string) bool {
 	})
 	if orderRes.Error != nil {
 		tx.Rollback()
-		config.Logger().Error(fmt.Sprintf("更新用户积分失败: %s", orderRes.Error))
+		config.Logger().Error(fmt.Sprintf("修改订单状态失败: %s", orderRes.Error))
 		return false
 	}
-	// 增加积分余额
-	userRes := tx.Model(&models.User{}).
-		Where("id = ?", orderDetail.UserId).
-		Update("integral", gorm.Expr("integral + ?", product.Integral))
-	if userRes.Error != nil {
+	res := ChangeIntegral(tx, orderDetail.UserId, product.Integral, 1, "购买积分")
+	if !res {
 		tx.Rollback()
-		config.Logger().Error(fmt.Sprintf("更新用户积分失败: %s", userRes.Error))
 		return false
 	}
 	tx.Commit()
-	go func(userId, integral int) {
+	return true
+}
+
+// ChangeIntegral 变动积分
+func ChangeIntegral(db *gorm.DB, userId, integral, changeType int, title string) bool {
+	// 增加积分余额
+	userRes := db.Model(&models.User{}).
+		Where("id = ?", userId).
+		Update("integral", gorm.Expr("integral + ?", integral))
+	if userRes.Error != nil {
+		config.Logger().Error(fmt.Sprintf("更新用户积分失败: %s", userRes.Error))
+		return false
+	}
+	go func(userId, integral, changeType int, title string) {
 		result := config.DB.Create(&models.IntegralLog{
-			Title: "购买积分",
+			Title: title,
 			Integral: integral,
 			UserId: userId,
-			Type: 1,
+			Type: changeType,
 		})
 		if result.Error != nil {
 			config.Logger().Error(fmt.Sprintf("创建用户使用记录失败: %s", result.Error))
 		}
-	}(orderDetail.UserId, product.Integral)
+	}(userId, integral, changeType, title)
 	return true
-
 }

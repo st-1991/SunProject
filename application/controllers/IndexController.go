@@ -3,11 +3,12 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/garyburd/redigo/redis"
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
-	"github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"gopkg.in/gomail.v2"
@@ -56,6 +57,7 @@ func SendSms(c *gin.Context) {
 		return
 	}
 	content := strings.Replace(string(fileC), "[code]", code, -1)
+	content = strings.Replace(content, "[date]", time.Now().Format("2006-01-02 15:04:05"), -1)
 	m.Content(content)
 	if err := email.Send(d, m); err != nil {
 		ApiError(c, &Response{Code: -1, Msg: "发送失败"})
@@ -102,6 +104,7 @@ func Login(c *gin.Context)  {
 			return
 		}
 		userDetails, _ = models.GetUser("", User.Id)
+		go service.ChangeIntegral(config.DB, User.Id, 100, 1, "注册赠送积分")
 	} else {
 		go func(userId int, ip string) {
 			user := models.User{Id: userId, Ip: ip}

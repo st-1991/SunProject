@@ -25,6 +25,13 @@ type Prompt struct {
 	ParentMessageId string `form:"parentMessageId"`
 }
 
+const (
+	CompletionIntegral = 10 // 对话消耗积分
+	LeastImageIntegral = 80 // 最小绘画消耗积分
+	MediumImageIntegral = 90 // 中等绘画消耗积分
+	MaxImageIntegral = 100 // 最大绘画消耗积分
+)
+
 func Completions(c *gin.Context) {
 	if !IsLogin(c) {
 		return
@@ -38,6 +45,14 @@ func Completions(c *gin.Context) {
 		ApiError(c, &Response{Code:-1, Msg: "请输入您要咨询的问题"})
 		return
 	}
+
+	userId := c.MustGet("userId").(int)
+	// 用户积分余额判断
+	if models.GetUserIntegral(userId) < CompletionIntegral {
+		ApiError(c, &Response{Code:3, Msg: "积分不足请充值～"})
+		return
+	}
+
 	var messages []service.Message
 	if p.ParentMessageId != "" {
 		var mDB models.Messages
@@ -47,13 +62,14 @@ func Completions(c *gin.Context) {
 		}
 	}
 	messages = append(messages, service.Message{Role: "user", Content: p.Prompt})
-	//ApiResponse(c, &Response{Data: messages})
-	//return
+
 	resp, err := service.ChatCompletions(messages)
 	if err != nil {
 		ApiError(c, &Response{Code:-1, Msg: err.Error()})
 		return
 	}
+	// 余额扣减
+	go service.ChangeIntegral(config.DB, userId, -10, 2, "对话消耗")
 	// 设置为流
 	c.Header("Content-Type", "text/event-stream")
 	if p.ParentMessageId == "" {
@@ -118,6 +134,26 @@ func CreateImages(c *gin.Context) {
 		ApiError(c, &Response{Code: -1, Msg: "图片数量为 1～10张"})
 		return
 	}
+
+	IntegralList := map[string]int{
+		"256x256": LeastImageIntegral,
+		"512x512": MediumImageIntegral,
+		"1024x1024": MaxImageIntegral,
+	}
+	depleteIntegral, ok := IntegralList[i.Size]
+	if !ok {
+		ApiError(c, &Response{Code: -1, Msg: "图片尺寸错误"})
+		return
+	}
+
+	userId := c.MustGet("userId").(int)
+	// 用户积分余额判断
+	if models.GetUserIntegral(userId) < depleteIntegral {
+		ApiError(c, &Response{Code:3, Msg: "积分不足请充值～"})
+		return
+	}
+	// 消耗余额
+	go service.ChangeIntegral(config.DB, userId, -depleteIntegral, 2, "绘画消耗-" + i.Size)
 	resp, err := service.ImagesGenerations(i)
 	if err != nil {
 		ApiError(c, &Response{Code:-1, Msg: err.Error()})
