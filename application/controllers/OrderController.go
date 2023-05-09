@@ -5,6 +5,7 @@ import (
 	"SunProject/application/service"
 	"SunProject/config"
 	pay2 "SunProject/libary/pay"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"math"
 	"net/http"
@@ -62,8 +63,8 @@ func PrePay(c *gin.Context) {
 		Type: order.PayType,
 		Name: order.Title,
 		OutTradeNo: order.OrderSn,
-		//Money: fmt.Sprintf("%.2f", order.OrderAmount),
-		Money: "0.10",
+		Money: fmt.Sprintf("%.2f", order.OrderAmount),
+		//Money: "0.10",
 		ClientIp: GetReaIp(c),
 		Device: "pc",
 	}
