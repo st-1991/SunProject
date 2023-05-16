@@ -127,3 +127,7 @@ func OrderStatus(c *gin.Context)  {
 	}
 	ApiResponse(c, &Response{Data: orderDetail})
 }
+
+func CardMi(c *gin.Context) {
+	ApiResponse(c, &Response{Data: config.CreateCardMi(16)})
+}

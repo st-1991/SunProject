@@ -87,6 +87,24 @@ func SliceColumn(input []map[string]interface{}, columnKey string) []interface{}
 	return columns
 }
 
+func CreateCardMi(length int) string {
+	rand.Seed(time.Now().UnixNano()) // 设置种子值为当前时间戳的纳秒部分
+
+	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") // 可用字符集合
+	maxIndex := len(letters) - 1 // 最大索引值
+
+	result := make([]rune, length)
+	result[0] = letters[rand.Intn(52)] // 随机选择大小写字母作为首字符
+
+	for i := 1; i < len(result); i++ {
+		result[i] = letters[rand.Intn(maxIndex+1)]
+		//if i == (len(result)-1)/2 { // 在中间位置插入一个横线符号（可省略）
+		//	result[i] = '-'
+		//}
+	}
+	return string(result)
+}
+
 func InArray(needle interface{}, haystack interface{}) bool {
 	switch key := needle.(type) {
 	case string:
